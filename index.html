@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HODOM-HSC OS — Maqueta UI (34 roles: equipo interno, unidad de cuidado e interfaces externas)</title>
+  <meta name="description" content="Maqueta de diseño de la capa UI e interacciones de HODOM-HSC OS según la vista humana de roles, historias y journeys (hd-dt, corte 18-08-2026): 12 roles internos, otro profesional en default-deny, paciente y cuidador, médico derivador externo, y las 18 interfaces externas (SEREMI, origen, camas, UEA, SAMU, APS, farmacia, laboratorio, imagenología, especialista, IAAS, calidad, dirección, gestión de personas, logística/REAS, TI y red social), ficha con etapa del recorrido, brechas V01–V13 y escenarios E2E declarados sin cerrar por pantalla. Datos sintéticos, sin backend.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Barra de MAQUETA: selector de contexto. No es UI de producto. -->
+  <div class="maqueta-bar" role="region" aria-label="Controles de la maqueta">
+    <span class="tag">Maqueta</span>
+    <label>Rol activo
+      <select id="role-select" aria-label="Rol activo"></select>
+    </label>
+    <label>Estado remoto
+      <select id="sim-select" aria-label="Estado remoto simulado">
+        <option value="normal">normal</option>
+        <option value="v02_rehearsal">Ensayo nocturno V02 · no operativo</option>
+        <option value="loading">cargando</option>
+        <option value="empty">vacío válido</option>
+        <option value="denied">denegado</option>
+        <option value="conflict">conflicto de revisión</option>
+        <option value="stale">dato vencido (stale)</option>
+        <option value="offline">sin conexión (offline)</option>
+        <option value="unavailable">servicio no disponible</option>
+        <option value="session_expired">sesión expirada</option>
+      </select>
+    </label>
+    <label>Dispositivo
+      <span role="group" aria-label="Modo de dispositivo">
+        <button type="button" class="mk mk-device" data-device="auto" aria-pressed="true">Auto</button>
+        <button type="button" class="mk mk-device" data-device="desktop" aria-pressed="false">Escritorio</button>
+        <button type="button" class="mk mk-device" data-device="mobile" aria-pressed="false">Móvil</button>
+      </span>
+    </label>
+  </div>
+
+  <div id="app"></div>
+
+  <script src="data.js"></script>
+  <script src="cases.js"></script>
+  <script src="scenes.js"></script>
+  <script src="map-data.js"></script>
+  <script src="map.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
