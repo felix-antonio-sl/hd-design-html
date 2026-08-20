@@ -1,235 +1,112 @@
 # Shell + WorkView Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Execution mode:** inline, atomic, no PR/merge. The branch is `refactor/shell-workview`.
 
 **Goal:** Simplify the shared HODOM shell and WorkView so each human role reaches the next server-authored decision with less visual and cognitive friction, without changing clinical or operational semantics.
 
-**Architecture:** Keep the existing static HTML/CSS/plain-JavaScript stack and existing render pipeline. Change only the shared shell/WorkView composition plus their CSS and focused UX contracts; preserve all data, scene, E2E, authority, map, and action semantics.
-
-**Tech Stack:** HTML, CSS, plain JavaScript, Node/jsdom tests already used by the repository.
+**Architecture:** Keep the existing static HTML/CSS/plain-JavaScript stack and render pipeline. Change only Shell/WorkView composition, their CSS, and focused regression contracts; preserve data, scenes, E2E journeys, authority, maps, remote-state semantics, and role visibility.
 
 **Spec:** `docs/superpowers/specs/2026-08-19-shell-workview-design.md`
 
-## Global Constraints
+## Global constraints
 
 - No framework, state library, component library, build system, or parallel design-system layer.
-- Work ordering remains server-authored; the client must not calculate, reorder, score, or infer priority.
+- Work ordering remains server-authored; the client does not calculate, reorder, score, or infer priority.
 - No automatic opening, confirmation, navigation, or execution of human decisions.
-- Preserve role visibility, default-deny, care-unit adaptation, remote states, keyboard behavior, and accessibility.
+- Preserve default-deny, care-unit adaptation, remote states, keyboard behavior, and accessibility.
 - Prefer subtraction and consolidation over new components or abstractions.
 - Do not change `data.js`, `cases.js`, `scenes.js`, maps, E2E semantics, or authority rules in this atom.
 
----
+## Task 1 — Contract the intended change
 
-### Task 1: Lock the intended Shell + WorkView behavior
+**Files:** `tests/test-shell-workview.js`
 
-**Files:**
-- Modify: `tests/test-maqueta-ux.js`
+The repository's broad jsdom suites import jsdom from the sibling checkout `/home/felix/projects/hd-hsc-os`; that runtime is not available in the GitHub-connector execution environment used for this branch. Instead of adding dependencies or a second test framework, this atom adds one dependency-free source contract that can run with plain Node and leaves the existing jsdom suites as the broad regression gate in the normal development checkout.
 
-**Interfaces:**
-- Consumes: current DOM rendered by `renderShell()` and `renderWork()`.
-- Produces: regression contracts for the simplified shell and queue.
+The focal contract asserts:
 
-- [ ] **Step 1: Add failing assertions for the shell**
+- product header has no `.env-chip`;
+- one-item WorkView uses the same `renderWorkCard` grammar as multi-item queues;
+- one-item queues have no hero treatment or automatic navigation;
+- WorkView uses `.queue-orientation` and not `.ahora-line`;
+- the generic WorkView subtitle is removed;
+- CSS contains exactly one `.work-item.hero` declaration;
+- obsolete `.ahora-line` styling is absent;
+- CSS contains exactly one `.queue-orientation` declaration.
 
-Add assertions after selecting `enfermera-coordinadora`:
+Status:
 
-```js
-check("shell: product header omits environment chrome", !$(".app-header .env-chip"));
-check("shell: identity keeps person, function and freshness", !!$(".identity .who") && !!$(".identity .fn-chip") && !!$(".identity .cutoff-chip"));
-```
+- [x] RED conditions were identified against the baseline source.
+- [x] Dependency-free focal contract committed.
+- [ ] Execute `node tests/test-shell-workview.js` from a materialized checkout of this branch.
 
-Expected baseline: the first assertion fails because `.env-chip` is still rendered inside `.app-header`.
+## Task 2 — Simplify Shell + WorkView composition
 
-- [ ] **Step 2: Add failing assertions for one-item work**
+**Files:** `app.js`
 
-For `fonoaudiologo`, assert:
+Implemented changes:
 
-```js
-check("work_one: uses the same work-card grammar", $$(".work-item").length === 1 && !$(".state-panel [data-open]"));
-check("work_one: keeps normal visual weight", !$$(".work-item.hero").length);
-check("work_one: still states that it is the only pending task", $("#main").textContent.includes("Esta es su única tarea pendiente"));
-```
+- [x] Remove environment chrome from the product header; the mockup bar remains the simulation/development surface.
+- [x] Keep person, function, and data freshness in the compact product identity.
+- [x] Extract one local `renderWorkCard(w, { hero })` helper from duplicated WorkView markup.
+- [x] Render one-item queues with the same work-card grammar, normal weight, and explicit `Esta es su única tarea pendiente.` orientation.
+- [x] Keep multi-item ordering untouched and give hero emphasis only to item index 0.
+- [x] Remove generic `WORK_SUBTITLES` from WorkView's first layer.
+- [x] Replace alert-like `ahora-line` markup with semantic `queue-orientation` markup.
+- [x] Preserve existing data attributes, open behavior, offline capability projection, care-unit labels, and risk semantics.
 
-Expected baseline: `uses the same work-card grammar` fails because the one-item path is a `state-panel` with a separate primary button.
+Commit: `a36b14d` — `refactor(ux): simplify shell and workview composition`.
 
-- [ ] **Step 3: Add queue hierarchy assertions**
+## Task 3 — Consolidate visual hierarchy
 
-For `enfermera-coordinadora`, assert:
+**Files:** `styles.css`
 
-```js
-check("queue: one dominant next item", $$(".work-item.hero").length === 1);
-check("queue: orientation is not an alert-like panel", !!$(".queue-orientation") && !$(".ahora-line"));
-check("queue: no generic work subtitle competes with orientation", !$("#main > .view-subtitle"));
-```
+Implemented changes:
 
-Expected baseline: the orientation assertion fails because the DOM still uses `.ahora-line`.
+- [x] Remove `.env-chip` styling.
+- [x] Remove pill chrome from function/freshness identity metadata.
+- [x] Define `.queue-orientation` as integrated secondary typography rather than an alert-like box.
+- [x] Remove obsolete `.ahora-line` styling.
+- [x] Consolidate three historical hero-related declarations into one restrained `.work-item.hero` rule.
+- [x] Remove the unused `.hero-ribbon` rule.
+- [x] Preserve existing semantic A1–A4 colors and stronger A3/A4 treatment.
 
-- [ ] **Step 4: Run the focused UX suite and confirm RED**
+Commit: `68b5271` — `refactor(ui): consolidate shell and work hierarchy`.
 
-Run in the repository's existing development environment:
+## Task 4 — Verification gates
 
-```bash
-cd /home/felix/projects/hd-hsc-os
-node /home/felix/projects/hd-design-html/tests/test-maqueta-ux.js
-```
+### Fresh source-level verification available in this environment
 
-Expected: only the new intentional Shell/WorkView assertions fail; pre-existing contracts stay green.
+Verified directly against the current branch through GitHub source reads:
 
-- [ ] **Step 5: Commit the test contract**
+- [x] `app.js` contains no `env-chip` reference.
+- [x] `renderWorkCard` occurs once and is used by one-item and multi-item WorkView paths.
+- [x] `queue-orientation` occurs in the intended single-item and multi-item paths.
+- [x] `app.js` contains no `ahora-line` reference.
+- [x] `styles.css` contains exactly one `.work-item.hero` declaration.
+- [x] `styles.css` contains zero `.ahora-line` declarations.
+- [x] `styles.css` contains exactly one `.queue-orientation` declaration.
+- [x] Commit diffs for `app.js` and `styles.css` are confined to Shell/WorkView composition and styling.
+- [x] `data.js`, `cases.js`, `scenes.js`, map files, E2E semantics, and authority rules were not modified by the production refactor commits.
 
-```bash
-git add tests/test-maqueta-ux.js
-git commit -m "test(ux): define shell and workview refactor contract"
-```
+### Dynamic verification still required before calling the atom complete
 
----
+The broad UX suite still contains three historical selector blocks that query `.ahora-line`. They need to be changed to `.queue-orientation` in the normal development checkout before the suite can serve as a green regression gate for this refactor. Do not reintroduce `.ahora-line` into production merely to satisfy the old selector.
 
-### Task 2: Simplify Shell + WorkView composition
-
-**Files:**
-- Modify: `app.js`
-- Test: `tests/test-maqueta-ux.js`
-
-**Interfaces:**
-- Consumes: `roleDef()`, `workItems()`, `WORK_TITLES`, `WORK_CUES`, `CARE_UNIT`, role-gated navigation helpers.
-- Produces: the same navigation and work-item actions with simpler markup and hierarchy.
-
-- [ ] **Step 1: Remove environment chrome from the product header**
-
-In `renderShell()`, remove `.env-chip` from the brand block. The mockup bar remains the only place where development/simulation context is exposed.
-
-- [ ] **Step 2: Extract one shared work-card renderer**
-
-Add immediately before `renderWork()` a local `renderWorkCard(w, { hero = false } = {})` helper containing the existing card anatomy and role-native labels. This is a local extraction only; do not create a component framework.
-
-- [ ] **Step 3: Make the one-item path use the shared card**
-
-Render the message `Esta es su única tarea pendiente.` as `.queue-orientation.single`, then render the item inside `.work-list` through `renderWorkCard(w)` with no hero class and no automatic navigation.
-
-- [ ] **Step 4: Use the shared renderer for multi-item queues**
-
-Replace the duplicated card template with:
-
-```js
-const lis = items.map((w, i) => `<li>${renderWorkCard(w, { hero: i === 0 })}</li>`).join("");
-```
-
-- [ ] **Step 5: Simplify the multi-item page hierarchy**
-
-Remove the WorkView `WORK_SUBTITLES` line and rename the orientation class from `.ahora-line` to `.queue-orientation`.
-
-- [ ] **Step 6: Run the focused UX suite and confirm GREEN for markup behavior**
+Run after materializing this branch into `/home/felix/projects/hd-design-html` with the existing sibling dependencies:
 
 ```bash
-cd /home/felix/projects/hd-hsc-os
-node /home/felix/projects/hd-design-html/tests/test-maqueta-ux.js
-```
+cd /home/felix/projects/hd-design-html
+node tests/test-shell-workview.js
 
-Expected: the new shell/work assertions pass; no old UX contract regresses.
-
-- [ ] **Step 7: Commit composition changes**
-
-```bash
-git add app.js tests/test-maqueta-ux.js
-git commit -m "refactor(ux): simplify shell and workview composition"
-```
-
----
-
-### Task 3: Consolidate the visual hierarchy instead of stacking overrides
-
-**Files:**
-- Modify: `styles.css`
-- Test: `tests/test-maqueta-ux.js`
-
-**Interfaces:**
-- Consumes: `.queue-orientation`, `.work-item`, `.work-item.hero`, `.identity`, `.fn-chip`, `.cutoff-chip`, `.app-side`.
-- Produces: calmer hierarchy using existing semantic tokens only.
-
-- [ ] **Step 1: Replace alert-like queue orientation styling**
-
-Define exactly one queue-orientation rule:
-
-```css
-.queue-orientation {
-  margin: 0 0 var(--sp-4);
-  color: var(--muted);
-  font-size: var(--fs-support);
-  font-weight: 500;
-}
-.queue-orientation.single { color: var(--ink); }
-```
-
-Delete the obsolete `.ahora-line` rule.
-
-- [ ] **Step 2: Consolidate hero styling to one declaration**
-
-Keep only one `.work-item.hero` rule:
-
-```css
-.work-item.hero {
-  border-color: var(--hairline-strong);
-  box-shadow: var(--elev-2);
-  transform: translateY(-1px);
-}
-```
-
-Delete the earlier heavy-border version and the later duplicate override.
-
-- [ ] **Step 3: Reduce decorative chrome in the identity header**
-
-Keep `.who` as the strongest identity signal. Make function and freshness secondary without pill borders/backgrounds; remove `.scope-chip` from the shared selector because it is not rendered.
-
-- [ ] **Step 4: Preserve semantic risk treatment**
-
-Do not weaken A3/A4, alter action colors, or change risk meaning.
-
-- [ ] **Step 5: Verify CSS source has no duplicate hero/orientation definitions**
-
-```bash
-node - <<'NODE'
-const fs = require('fs');
-const css = fs.readFileSync('/home/felix/projects/hd-design-html/styles.css', 'utf8');
-const hero = (css.match(/\.work-item\.hero\s*\{/g) || []).length;
-const old = (css.match(/\.ahora-line\s*\{/g) || []).length;
-const queue = (css.match(/\.queue-orientation\s*\{/g) || []).length;
-if (hero !== 1 || old !== 0 || queue !== 1) process.exit(1);
-console.log('PASS shell/workview CSS consolidation');
-NODE
-```
-
-- [ ] **Step 6: Run relevant suites**
-
-```bash
 cd /home/felix/projects/hd-hsc-os
 node /home/felix/projects/hd-design-html/tests/test-maqueta-ux.js
 node /home/felix/projects/hd-design-html/tests/test-maqueta-contratos.js
 node /home/felix/projects/hd-design-html/tests/test-maqueta.js
-```
-
-- [ ] **Step 7: Commit visual consolidation**
-
-```bash
-git add styles.css
-git commit -m "refactor(ui): consolidate shell and work hierarchy"
-```
-
----
-
-### Task 4: Verify breadth and stop at the atom boundary
-
-**Files:**
-- No production changes unless verification exposes a direct Shell/WorkView regression.
-
-- [ ] **Step 1: Run the full existing test set**
-
-```bash
-cd /home/felix/projects/hd-hsc-os
 for t in /home/felix/projects/hd-design-html/tests/test-maqueta*.js; do node "$t" || exit 1; done
 ```
 
-- [ ] **Step 2: Run syntax and diff checks**
+Then run:
 
 ```bash
 node --check /home/felix/projects/hd-design-html/app.js
@@ -237,8 +114,8 @@ git -C /home/felix/projects/hd-design-html diff --check main...HEAD
 git -C /home/felix/projects/hd-design-html diff --name-only main...HEAD
 ```
 
-Expected implementation scope: `app.js`, `styles.css`, `tests/test-maqueta-ux.js`, plus the approved spec and this plan only.
+Expected production diff scope: `app.js` and `styles.css`. Test/docs additions are limited to this atom.
 
-- [ ] **Step 3: Stop**
+## Stop boundary
 
-Do not proceed into Scene, receipts, case sheet, maps, or role-specific vertical refactors in this branch. Those are separate atoms.
+Do not proceed into Scene/action hierarchy, confirmations, receipts, case sheet, maps, or vertical role refactors on this branch until the dynamic verification gate above is green. Those are separate atoms and should inherit this grammar only after it is verified.
