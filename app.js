@@ -1064,7 +1064,6 @@ function renderShell() {
       <div class="brand">
         <strong>HODOM</strong>
         <span class="tenant">${esc(TENANT)}</span>
-        <span class="env-chip">${esc(ENV_NOTICE)}</span>
       </div>
       <div class="identity">
         <span class="who">${esc(r.person)}</span>
@@ -1227,6 +1226,23 @@ function offlineCapabilityHtml(w) {
   return `<span class="offline-capability ${esc(c.tone)}">${esc(c.text)}</span>`;
 }
 
+function renderWorkCard(w, { hero = false } = {}) {
+  const care = CARE_UNIT.has(state.role);
+  return `<button class="work-item ${hero ? "hero" : ""}" data-open="${esc(w.id)}"${e2e08S3OpenAttrs(w)}${w.id === "E2E08-MD-01" ? ' data-e2e08-task-role="direct"' : w.id === "E2E08-MR-01" ? ' data-e2e08-task-role="regulator"' : ""}>
+    <span class="wi-top">
+      <span class="wi-title">${esc(w.title)}</span>
+      <span class="risk ${esc(w.risk)}">${care ? esc(state.role === "paciente" && w.risk === "A2" ? "Necesita su decisión" : w.riskLabel) : `${esc(w.risk)} · ${esc(w.riskLabel)}`}</span>
+    </span>
+    <span class="wi-context">${esc(w.context)}</span>
+    ${WORK_CUES[w.id] ? `<span class="wi-cue">${esc(WORK_CUES[w.id])}</span>` : ""}
+    ${offlineCapabilityHtml(w)}
+    <span class="wi-meta wi-need">
+      <span>${care ? "Cuándo" : "Plazo"}: ${esc(w.due)}</span>
+      <span>${care ? "Quién responde" : "Responsable siguiente"}: ${esc(w.receiver)}</span>
+    </span>
+  </button>`;
+}
+
 function renderWork() {
   const items = workItems();
   const r = roleDef();
@@ -1262,7 +1278,7 @@ function renderWork() {
       </div>`;
   }
 
-  /* work_one: una sola obligación → anuncio + navegación automática */
+  /* work_one: una sola obligación → misma gramática, decisión explícita */
   if (items.length === 1) {
     const w = items[0];
     return `
@@ -1273,37 +1289,14 @@ function renderWork() {
       ${e2e08Continuation}
       ${e2e01RoleStatus}
       ${e2e07RoleStatus}
-      <div class="state-panel">
-        <div class="state-kind">Una tarea pendiente</div>
-        <h2>${esc(w.title)}</h2>
-        <p>${esc(w.context)}</p>
-        ${offlineCapabilityHtml(w)}
-        <p>Esta es su única tarea pendiente.</p>
-        <button class="btn primary" data-open="${esc(w.id)}"${e2e08S3OpenAttrs(w)}>Abrir la tarea</button>
-      </div>`;
+      <p class="queue-orientation single">Esta es su única tarea pendiente.</p>
+      <ul class="work-list"><li>${renderWorkCard(w)}</li></ul>`;
   }
 
-  const care = CARE_UNIT.has(state.role);
-  const lis = items.map((w, i) => `
-    <li>
-        <button class="work-item ${i === 0 ? "hero" : ""}" data-open="${esc(w.id)}"${e2e08S3OpenAttrs(w)}${w.id === "E2E08-MD-01" ? ' data-e2e08-task-role="direct"' : w.id === "E2E08-MR-01" ? ' data-e2e08-task-role="regulator"' : ""}>
-        <span class="wi-top">
-          <span class="wi-title">${esc(w.title)}</span>
-          <span class="risk ${esc(w.risk)}">${care ? esc(state.role === "paciente" && w.risk === "A2" ? "Necesita su decisión" : w.riskLabel) : `${esc(w.risk)} · ${esc(w.riskLabel)}`}</span>
-        </span>
-        <span class="wi-context">${esc(w.context)}</span>
-        ${WORK_CUES[w.id] ? `<span class="wi-cue">${esc(WORK_CUES[w.id])}</span>` : ""}
-        ${offlineCapabilityHtml(w)}
-        <span class="wi-meta wi-need">
-          <span>${care ? "Cuándo" : "Plazo"}: ${esc(w.due)}</span>
-          <span>${care ? "Quién responde" : "Responsable siguiente"}: ${esc(w.receiver)}</span>
-        </span>
-      </button>
-    </li>`).join("");
+  const lis = items.map((w, i) => `<li>${renderWorkCard(w, { hero: i === 0 })}</li>`).join("");
 
   return `
     <h1 class="view-title">${workTitle}</h1>
-    ${WORK_SUBTITLES[r.id] ? `<p class="view-subtitle">${esc(WORK_SUBTITLES[r.id])}</p>` : ""}
     ${contextBanner()}
     ${e2e08S3PrivateCopy}
     ${e2e08Summary}
@@ -1311,7 +1304,7 @@ function renderWork() {
     ${e2e08S3QueueSurface}
     ${e2e01RoleStatus}
     ${e2e07RoleStatus}
-    <p class="ahora-line">${esc(ahoraLine(items))}</p>
+    <p class="queue-orientation">${esc(ahoraLine(items))}</p>
     <ul class="work-list">${lis}</ul>`;
 }
 
