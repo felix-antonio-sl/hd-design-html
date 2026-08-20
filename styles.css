@@ -112,19 +112,15 @@ button { font-family: inherit; cursor: pointer; }
 .brand { display: flex; align-items: baseline; gap: var(--sp-2); }
 .brand strong { font-size: var(--fs-heading); font-weight: var(--fw-heading); letter-spacing: -0.02em; }
 .brand .tenant { color: var(--muted); font-size: var(--fs-support); }
-.env-chip {
-  font-size: var(--fs-support); color: var(--muted);
-  border: 1px solid var(--hairline); border-radius: 999px;
-  padding: 3px 10px; background: var(--surface-subtle);
-}
 .identity { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; font-size: var(--fs-support); }
 .identity .who { font-weight: 600; color: var(--ink); }
-.fn-chip, .scope-chip, .cutoff-chip {
-  border: 1px solid var(--hairline); border-radius: 999px;
-  padding: 3px 10px; background: var(--surface);
+.fn-chip, .cutoff-chip {
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: var(--muted);
 }
-.fn-chip { color: var(--ink); }
+.fn-chip { color: var(--ink); font-weight: 500; }
 .cutoff-chip { font-variant-numeric: tabular-nums; }
 
 .app-nav {
@@ -180,6 +176,11 @@ button { font-family: inherit; cursor: pointer; }
   transition: border-color var(--motion-1), box-shadow var(--motion-1), transform var(--motion-1);
 }
 .work-item:hover { border-color: var(--hairline-strong); box-shadow: var(--elev-1); transform: translateY(-1px); }
+.work-item.hero {
+  border-color: var(--hairline-strong);
+  box-shadow: var(--elev-2);
+  transform: translateY(-1px);
+}
 .work-item .wi-top { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: flex-start; justify-content: space-between; }
 .work-item .wi-title { font-size: var(--fs-body); font-weight: 600; letter-spacing: -0.006em; }
 .work-item .wi-context { color: var(--muted); font-size: var(--fs-support); margin-top: 4px; }
@@ -188,6 +189,13 @@ button { font-family: inherit; cursor: pointer; }
   margin-top: var(--sp-2); font-size: var(--fs-support); color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
+.queue-orientation {
+  margin: 0 0 var(--sp-4);
+  color: var(--muted);
+  font-size: var(--fs-support);
+  font-weight: 500;
+}
+.queue-orientation.single { color: var(--ink); }
 
 /* chips de atención A0–A4 */
 .risk {
@@ -615,20 +623,7 @@ body.force-mobile .day-link { flex: 0 0 18px; }
 .j-cell.now { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 600; }
 .j-now-label { font-size: var(--fs-support); color: var(--ink); margin-left: 6px; flex: 1 1 220px; }
 
-/* ---------- pasada UX 2026-08-18: anticipación y golpe de vista ---------- */
-/* línea «ahora»: cuánto hay y por dónde empezar */
-.ahora-line {
-  font-size: var(--fs-body); color: var(--ink);
-  background: var(--info-surface); border: 1px solid var(--border);
-  border-radius: var(--radius-m); padding: 10px 14px; margin: 0 0 var(--sp-3);
-}
-/* héroe: la primera tarea se distingue sin reordenar (el orden es del servidor) */
-.work-item.hero { border: 2px solid var(--ink); box-shadow: 0 2px 10px rgba(23, 32, 42, 0.10); }
-.hero-ribbon {
-  display: inline-block; background: var(--ink); color: #FFFFFF;
-  font-size: var(--fs-support); font-weight: 600;
-  padding: 2px 10px; border-radius: 999px; margin-bottom: 6px;
-}
+/* ---------- WorkView: anticipación y golpe de vista ---------- */
 /* cue: por qué esto y por qué ahora */
 .work-item .wi-cue { display: block; color: var(--ink); font-size: var(--fs-support); font-weight: 600; margin-top: 6px; }
 /* metadatos en dos niveles: necesidad primero, procedencia después */
@@ -808,8 +803,6 @@ body.force-mobile .app-nav { display: flex; }
 .maqueta-bar select, .maqueta-bar button.mk { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.14); }
 .maqueta-bar button.mk[aria-pressed="true"] { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.32); }
 
-/* héroe: la elevación por sombra basta; borde hairline fuerte, no marco negro */
-.work-item.hero { border-color: var(--hairline-strong); box-shadow: var(--elev-2); }
 .next-strip { border-color: var(--hairline-strong); }
 
 /* ---------- remediación deliberativa 2026-08-19 ---------- */
