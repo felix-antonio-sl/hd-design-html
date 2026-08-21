@@ -154,14 +154,6 @@ const WORK = {
       revision: "rev. 3", provenance: "Handoff originado 16-08-2026 18:22"
     },
     {
-      id: "OBL-CO-03", scene: "caso-ana-social",
-      title: "Cubrir la evaluación social pendiente de Ana P. con la cobertura declarada",
-      context: "HOD-2026-0129 · función sin titular hoy", risk: "A2",
-      riskLabel: "Brecha visible con riesgo residual declarado",
-      due: "Reevaluación 18-08-2026", receiver: "Trabajador social (titular ausente)",
-      revision: "rev. 2", provenance: "Alerta de sobrecarga de cuidador 16-08-2026"
-    },
-    {
       id: "OBL-CO-04", scene: "turnos-del-dia",
       title: "Cubrir el turno de TENS de la tarde: ausencia reportada 07:10",
       context: "Turnos del día · misma nómina que administra Dirección Técnica", risk: "A2",
@@ -336,26 +328,6 @@ const WORK = {
       riskLabel: "Carga sin medir resta capacidad clínica",
       due: "Cierre de semana · hoy 17:00", receiver: "Coordinación · Dirección Técnica (dimensionar)",
       revision: "rev. 1", provenance: "Ciclo semanal de la unidad"
-    }
-  ],
-
-  /* ===== R08 · TRABAJADOR SOCIAL ===== */
-  "trabajador-social": [
-    {
-      id: "OBL-TSO-01", scene: "social-ana",
-      title: "Evaluar sobrecarga del cuidador de Ana P. y activar red de apoyo",
-      context: "HOD-2026-0129 · alerta de sobrecarga declarada por el cuidador", risk: "A3",
-      riskLabel: "Riesgo de quiebre del cuidado",
-      due: "Reevaluación 18-08-2026", receiver: "Coordinación · médico tratante",
-      revision: "rev. 2", provenance: "Alerta recibida 16-08-2026 21:35"
-    },
-    {
-      id: "OBL-TSO-02", scene: "social-elena",
-      title: "Evaluación social de Elena F. — una de las cinco de la admisión",
-      context: "HOD-2026-0142 · evaluación completada · firmar y entregar", risk: "A2",
-      riskLabel: "Admisión esperando convergencia",
-      due: "Orden justo de la cola", receiver: "Decisor de admisión",
-      revision: "rev. 1", provenance: "Visita domiciliaria 15-08-2026"
     }
   ],
 
@@ -562,7 +534,7 @@ const WORK = {
       title: "Declarar sobrecarga o decir «no puedo más», sin culpa",
       context: "Su declaración obliga a reevaluar el plan, no a culparla", risk: "A2",
       riskLabel: "Usted ya declaró sobrecarga el 16-08 · en seguimiento",
-      due: "Cuando usted lo decida", receiver: "Coordinación · trabajo social",
+      due: "Cuando usted lo decida", receiver: "Coordinación · función social SIN TITULAR",
       revision: "rev. 1", provenance: "Su declaración del 16-08-2026 21:35"
     }
   ],
@@ -786,7 +758,7 @@ const WORK = {
       title: "Activar el apoyo con disponibilidad confirmada — una red nominal sin confirmar no existe",
       context: "Solicitud con necesidad, consentimiento, urgencia y responsable", risk: "A2",
       riskLabel: "Apoyo por confirmar con responsable",
-      due: "Aceptar, rechazar o programar con plazo realista", receiver: "Trabajo social · coordinación",
+      due: "PENDIENTE / NO DETERMINADO", receiver: "Red social-territorial · integración social SIN TITULAR",
       revision: "rev. 1", provenance: "Solicitud de activación de red 16-08-2026"
     }
   ]
@@ -801,7 +773,6 @@ const ROLES = [
   { id: "enfermero-clinico",     label: "Enfermero clínico",        person: "Javier Núñez A.",  fn: "Enfermería clínica",            scope: "Plan de cuidados asignado", extraNav: { id: "mi-dia", label: "Mi día" }, extraNav2: { id: "brechas", label: "Recorridos" } },
   { id: "kinesiologo",           label: "Kinesiólogo",              person: "Francisca Leal R.",fn: "Rehabilitación · kinesiología", scope: "Objetivos funcionales asignados", extraNav: { id: "mi-dia", label: "Mi día" }, extraNav2: { id: "brechas", label: "Recorridos" } },
   { id: "tecnico-enfermeria",    label: "TENS",                     person: "Ricardo Pavez S.", fn: "TENS · ejecución delegada",     scope: "Tareas delegadas con supervisor", extraNav: { id: "mi-dia", label: "Mi día" }, extraNav2: { id: "brechas", label: "Recorridos" } },
-  { id: "trabajador-social",     label: "Trabajador social",        person: "Valentina Reyes C.",fn: "Trabajo social",                scope: "Evaluaciones y red social", extraNav: { id: "mi-dia", label: "Mi día" }, extraNav2: { id: "brechas", label: "Recorridos" } },
   { id: "fonoaudiologo",         label: "Fonoaudiólogo",            person: "Sofía Miranda B.", fn: "Fonoaudiología",                scope: "Cartera fonoaudiológica", extraNav: { id: "mi-dia", label: "Mi día" }, extraNav2: { id: "brechas", label: "Recorridos" } },
   { id: "administrador-seguridad",label:"Administrador de seguridad",person:"Andrés Fuentes G.",fn: "Seguridad de la información",   scope: "Identidades y evidencia · sin acceso clínico", extraNav: { id: "sistema", label: "Sistema" }, extraNav2: { id: "brechas", label: "Recorridos" } },
   { id: "conductor",             label: "Conductor",                person: "Héctor Vargas M.", fn: "Conducción y custodia logística",scope: "Rutas y custodias asignadas · sin datos clínicos", extraNav: { id: "ruta", label: "Ruta del día" }, extraNav2: { id: "brechas", label: "Recorridos" } },
@@ -877,9 +848,9 @@ const TOMORROW = {
   date: "18-08-2026",
   needs: [
     { person: "jorge", need: "Ingreso: traslado desde Medicina Interna + primera valoración", window: "09:00–10:30", territory: "por verificar", requirements: "equipo de ingreso · consentimiento versionado", who: "enfermería + medicina" },
-    { person: "elena", need: "Ingreso tentativo (condicionado a la decisión operacional · brecha V01): primera valoración + evaluación de cuidador", window: "09:00–10:30", territory: "periurbano", requirements: "consistencias espesadas declaradas", who: "enfermería + trabajo social" },
+    { person: "elena", need: "Ingreso tentativo (condicionado a la decisión operacional · brecha V01): primera valoración · evaluación social PENDIENTE", window: "09:00–10:30", territory: "periurbano", requirements: "evaluación social SIN TITULAR · no sustituida por enfermería", who: "enfermería · función social SIN TITULAR" },
     { person: "rosa", need: "Curación + control de potasio + sesión kinésica", window: "09:00–12:00", territory: "urbano", requirements: "custodia de muestra refrigerada", who: "TENS + kinesiología" },
-    { person: "ana", need: "Control de signos + reevaluación social", window: "10:00–12:00", territory: "periurbano", requirements: "entorno con alerta social declarada", who: "TENS + trabajo social" },
+    { person: "ana", need: "Control de signos · necesidad de evaluación social PENDIENTE", window: "10:00–12:00", territory: "periurbano", requirements: "entorno con alerta declarada · función social SIN TITULAR", who: "TENS · función social SIN TITULAR" },
     { person: "luis", need: "Sin visita: cierre pendiente de acuse APS", window: "—", territory: "urbano", requirements: "—", who: "medicina (remoto)" }
   ],
   capacity: [
@@ -887,7 +858,7 @@ const TOMORROW = {
     ["TENS", "1 titular · 08:00–17:00"],
     ["Kinesiología", "1 titular · 08:30–17:30"],
     ["Medicina", "1 presencial + regulador remoto 20:00–08:00"],
-    ["Trabajo social", "SIN TITULAR · cobertura provisional con límites"],
+    ["Trabajo social", "SIN TITULAR · Enfermería observada, incompleta y no equivalente"],
     ["Fonoaudiología", "1 titular · media jornada AM"],
     ["Móviles", "M1 4×4 · R. Soto + M2 · H. Vargas"]
   ],
@@ -896,7 +867,7 @@ const TOMORROW = {
     { vehicle: "M2 · H. Vargas", stops: ["Traslado Jorge M. 09:00 (enfermería + médico)", "Ana P. 10:45 (control TENS)", "Rosa C. 11:45 (sesión kinésica)", "Retorno 13:00"] }
   ],
   conflicts: [
-    "Trabajo social sin titular: la reevaluación de Ana P. y la evaluación de cuidador de Elena F. quedan con cobertura provisional con límites, o se escalan hoy a Dirección Técnica.",
+    "Trabajo social sin titular: la cobertura por Enfermería es observada, incompleta y no equivalente; límites, riesgo y plan de cierre siguen pendientes o no determinados.",
     "Franja 12:00–14:00 sin margen: cualquier retraso traslada una visita; el orden justo queda declarado al publicar.",
     "El ingreso de Elena F. (09:00) queda tentativo hasta adjudicar la autoría de aceptar/diferir/rechazar (brecha V01): se publica con la condición visible, nunca como hecho."
   ]
@@ -985,6 +956,17 @@ const BRECHAS = [
   ["V12", "¿Qué indicadores se pueden producir desde fuentes vivas?", "R01, R02, R20, R29, R30, R33", "decisiones sobre cifras incomparables"],
   ["V13", "¿Existe una evaluación global del Caso terminado; quién la emite?", "R01, R03, R05, R29, R30, R33", "inventar un evaluador no autorizado"]
 ];
+
+/* R08 no es una identidad operativa al corte: esta declaración alimenta
+   solamente la superficie de gobierno. No asigna cobertura, autoridad ni
+   acciones a otro estamento y no cierra V07. */
+const SOCIAL_ROLE_GAP = Object.freeze({
+  title: "Trabajo social requerido · SIN TITULAR · V07 abierta",
+  coverage: "Enfermería: cobertura observada, incompleta y no equivalente",
+  limits: "Pendiente / no determinado",
+  risk: "Pendiente / no determinado",
+  closure: "Pendiente / no determinado"
+});
 
 /* ---------- Escenarios end-to-end (validar con personas reales) ---------- */
 const E2E = [
@@ -1078,7 +1060,7 @@ const E2E_STEPS = {
 const ROLE_SHORT = {
   "direccion-tecnica":"DT", "enfermera-coordinadora":"Coordinación", "medico-atencion-directa":"Médico directo",
   "medico-regulador":"Regulador", "enfermero-clinico":"Enfermería", "kinesiologo":"Kinesiología",
-  "tecnico-enfermeria":"TENS", "trabajador-social":"T. social", "fonoaudiologo":"Fonoaudiología",
+  "tecnico-enfermeria":"TENS", "trabajador-social":"T. social · AUSENTE", "fonoaudiologo":"Fonoaudiología",
   "otro-profesional":"Otro profesional", "conductor":"Conductor", "administrativo":"Administrativo",
   "administrador-seguridad":"Seguridad", "seremi":"SEREMI", "paciente":"Paciente", "cuidador":"Cuidador/a",
   "representante-legal":"Rep. legal", "medico-derivador":"Derivador", "enfermeria-origen":"Enf. origen",
@@ -1104,7 +1086,6 @@ const WORK_CUES = {
   "OBL-DT-05": "El programa del 24-08 se arma con esta capacidad.",
   "OBL-CO-01": "El equipo espera el programa para salir a las 08:45.",
   "OBL-CO-02": "Ventana de traslado 11:00–13:00 — aceptar antes libera al origen.",
-  "OBL-CO-03": "La reevaluación es mañana; la cobertura se declara hoy.",
   "OBL-CO-04": "Tres prestaciones de la tarde necesitan ejecutor antes de las 13:00.",
   "OBL-MD-01": "Tras comunicación válida: si no registra conducta a las 08:22, escala al médico regulador.",
   "OBL-MD-02": "Ventana 10:30–11:30 · sale con el Móvil 2 a las 09:05.",
@@ -1123,8 +1104,6 @@ const WORK_CUES = {
   "OBL-TS-01": "Hoy 09:40 · delegación vigente con supervisora.",
   "OBL-TS-02": "La muestra llega al laboratorio antes de las 12:00.",
   "OBL-TS-03": "Cierre de semana 17:00.",
-  "OBL-TSO-01": "Quiebre posible — reevaluación mañana o antes si se declara.",
-  "OBL-TSO-02": "Su firma completa las cinco evaluaciones.",
   "OBL-FN-01": "Condiciona la preparación del domicilio.",
   "OBL-SEC-01": "Ingreso 24-08 — la cuenta no tiene autoridad clínica hasta la designación.",
   "OBL-SEC-02": "La revisión vence 18-08.",
@@ -1146,7 +1125,7 @@ const WORK_CUES = {
   "OBL-PA-03": "Cuando lo necesite — con acuse.",
   "OBL-CU-01": "Téngala a la vista siempre.",
   "OBL-CU-02": "Cuando lo necesite — con acuse y orientación.",
-  "OBL-CU-03": "La reevaluación social es mañana 18-08.",
+  "OBL-CU-03": "Puede declarar un cambio ahora; la evaluación social sigue SIN TITULAR.",
   "OBL-SE-01": "El expediente espera resolución con evidencia de operación.",
   "OBL-SE-02": "Plazo al cumplimiento 21-08 — con criterio de cierre declarado.",
   "OBL-RL-01": "Antes de decidir por otra persona, su alcance se verifica.",

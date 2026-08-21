@@ -34,7 +34,7 @@ setRole("enfermera-coordinadora");
 check("shell: no repite el alcance del rol", !$(".scope-chip"));
 check("shell: no repite el aviso de maqueta en un footer", !$(".footer-note"));
 check("cola: no usa un subtítulo genérico", !$(".view-subtitle"));
-check("ahora: conserva conteo y prioridad sin repetir el cue", $(".ahora-line").textContent.includes("4 tareas pendientes") && $(".ahora-line").textContent.includes("Empiece por la más urgente") && !$(".ahora-line").textContent.includes("El equipo espera el programa"));
+check("ahora: conserva conteo y prioridad sin repetir el cue", $(".ahora-line").textContent.includes("3 tareas pendientes") && $(".ahora-line").textContent.includes("Empiece por la más urgente") && !$(".ahora-line").textContent.includes("El equipo espera el programa"));
 check("héroe: primer ítem marcado por composición", $$(".work-item")[0].classList.contains("hero"));
 check("héroe: sin instrucción redundante «Empiece aquí»", $$(".hero-ribbon").length === 0);
 check("héroe: cue visible con el porqué-ahora", $$(".work-item")[0].textContent.includes("El equipo espera el programa para salir a las 08:45"));
@@ -103,11 +103,17 @@ $("[data-open-next]").click();
 check("continuación: abre la siguiente tarea directo", $("#main h1").textContent.includes("Atención — Rosa C."));
 
 /* última tarea completada: sin strip */
-setRole("fonoaudiologo");
-$("[data-open]").click();
-$$(".action-bar .btn.primary")[0].click();
-$("[data-confirm]").click();
-check("sin siguiente: no hay strip al agotar la cola", !$(".next-strip"));
+const lastTaskDom = new JSDOM(html, { runScripts: "outside-only", url: "http://localhost/" });
+const lastTaskWindow = lastTaskDom.window;
+lastTaskWindow.eval(combined);
+const lastTaskRole = lastTaskWindow.document.querySelector("#role-select");
+lastTaskRole.value = "fonoaudiologo";
+lastTaskRole.dispatchEvent(new lastTaskWindow.Event("change"));
+lastTaskWindow.document.querySelector("[data-open]")?.click();
+lastTaskWindow.document.querySelector(".action-bar .btn.primary")?.click();
+lastTaskWindow.document.querySelector("[data-confirm]")?.click();
+check("sin siguiente: no hay strip al agotar la cola",
+  !lastTaskWindow.document.querySelector(".next-strip"));
 
 /* ===== Mi día: próxima parada ===== */
 setRole("kinesiologo");
@@ -131,12 +137,472 @@ check("ficha: strip de tarea pendiente sobre el caso", !!$(".case-task") && $(".
 $(".case-task [data-open-obl]").click();
 check("ficha: el strip abre la obligación vigente del caso", $("#main h1").textContent.includes("Atención — Rosa C."));
 
-/* ficha sin tarea del rol: sin strip (kinesiólogo en ficha de Luis A. vía búsqueda) */
+/* ficha por asignación: matriz R05–R09. Cada caso permitido deriva de una
+   obligación WORK cuya escena declara el mismo caseId; cada negativo es un
+   ID canónico ajeno. Ocultar la fila no basta: openCase también falla cerrado. */
+const assignmentScopedCases = [
+  { role: "enfermero-clinico", assigned: "HOD-2026-0131", foreign: "HOD-2026-0117", foreignKind: "histórico" },
+  { role: "kinesiologo", assigned: "HOD-2026-0138", foreign: "HOD-2026-0129", foreignKind: "activo" },
+  { role: "tecnico-enfermeria", assigned: "HOD-2026-0129", foreign: "HOD-2026-0138", foreignKind: "activo" },
+  { role: "fonoaudiologo", assigned: "HOD-2026-0142", foreign: "HOD-2026-0131", foreignKind: "activo" },
+];
+for (const scenario of assignmentScopedCases) {
+  setRole(scenario.role);
+  $$(".app-nav button").find(b => b.textContent === "Buscar").click();
+  let caseQuery = $("#q");
+  caseQuery.value = scenario.assigned;
+  caseQuery.dispatchEvent(new window.Event("input"));
+  const assignedRow = $(`#search-results [data-case-open="${scenario.assigned}"]`);
+  assignedRow?.click();
+  const purposeTitle = {
+    "tecnico-enfermeria": "Control de signos y toma de muestra",
+    "fonoaudiologo": "Evaluación e intervención fonoaudiológica",
+  }[scenario.role];
+  const assignedSurfaceOpen = purposeTitle
+    ? !!$("[data-back]") && $("#main h1")?.textContent.includes(purposeTitle)
+    : !!$("[data-back-case]") && $$("#main .rh-grid b").some(node => node.textContent === scenario.assigned);
+  check(`ficha asignada ${scenario.role}: ${scenario.assigned} es visible y abrible`,
+    !!assignedRow && assignedSurfaceOpen);
+
+  setRole(scenario.role);
+  $$(".app-nav button").find(b => b.textContent === "Buscar").click();
+  caseQuery = $("#q");
+  caseQuery.value = scenario.foreign;
+  caseQuery.dispatchEvent(new window.Event("input"));
+  check(`ficha ajena ${scenario.foreignKind} ${scenario.role}: ${scenario.foreign} no aparece`,
+    !$(`#search-results [data-case-open="${scenario.foreign}"]`));
+  window.openCase(scenario.foreign);
+  check(`ficha ajena ${scenario.foreignKind} ${scenario.role}: openCase ${scenario.foreign} falla cerrado`,
+    !!$("#q") && !$("[data-back-case]"));
+}
+
+/* R08 · la ausencia de dotación es una brecha de gobierno, no una identidad
+   operativa. Las mutaciones que este contrato debe atrapar son: reintroducir
+   el rol en cualquier selector, aceptar un roleId forjado, conservar las
+   escenas ejecutables o esconder la ausencia al DT. */
+setRole("direccion-tecnica");
+const r08Options = $$("#role-select option");
+check("R08 ausente: no aparece en el selector de actores actuales",
+  !r08Options.some((option) => option.value === "trabajador-social")
+    && !r08Options.some((option) => option.textContent.trim() === "Trabajador social"));
+
+window.openPalette();
+const r08PaletteQuery = $("#pal-input");
+r08PaletteQuery.value = "trabajador social";
+r08PaletteQuery.dispatchEvent(new window.Event("input"));
+check("R08 ausente: QuickSwitch no ofrece rol, tarea, caso ni acción R08",
+  !$$('.pal-item').some((item) => /trabajador social|OBL-TSO|social-ana|social-elena/i.test(item.textContent)));
+window.closePalette();
+
+const r08ActivationRejected = typeof window.setRole === "function"
+  && window.setRole("trabajador-social") === false;
+window.openCase("HOD-2026-0142");
+check("R08 ausente: setRole forjado falla cerrado y openCase no activa una superficie R08",
+  r08ActivationRejected
+    && !$(".fn-chip")?.textContent.includes("Trabajo social")
+    && !$("#main h1")?.textContent.includes("Evaluación social"));
+
+check("R08 ausente: las escenas y acciones ficticias ya no son ejecutables",
+  !window.sceneDef("social-ana")
+    && !window.sceneDef("social-elena")
+    && !window.actionById("social-ana", "tso-ana")
+    && !window.actionById("social-elena", "tso-elena"));
+
+setRole("direccion-tecnica");
+$$('.app-nav button').find((button) => button.textContent.includes("Recorridos"))?.click();
+$('[data-brecha-lens="brechas"]')?.click();
+const r08Gap = $('[data-social-role-gap]');
+check("R08 ausente: DT ve la función requerida y V07 abierta en Brechas",
+  !!r08Gap
+    && r08Gap.textContent.includes("Trabajo social requerido")
+    && r08Gap.textContent.includes("SIN TITULAR")
+    && r08Gap.textContent.includes("V07 abierta"));
+check("R08 ausente: cobertura y gobierno son read-only, incompletos y no equivalentes",
+  !!r08Gap
+    && r08Gap.textContent.includes("observada, incompleta y no equivalente")
+    && r08Gap.textContent.includes("Pendiente / no determinado")
+    && !r08Gap.querySelector("button, input, select, textarea, [data-act]"));
+check("R08 Brechas: el selector de lentes expone tabs válidos",
+  $(".lenses")?.getAttribute("role") === "tablist"
+    && $$("[data-brecha-lens]").every((button) => button.getAttribute("role") === "tab"));
+const r08BrechasTable = r08Gap?.nextElementSibling?.querySelector(".table-scroll");
+check("R08 Brechas: la tabla desplazable es una región de teclado con nombre",
+  r08BrechasTable?.getAttribute("role") === "region"
+    && r08BrechasTable?.getAttribute("tabindex") === "0"
+    && r08BrechasTable?.getAttribute("aria-label") === "Las 13 brechas que siguen abiertas");
+const styleProbe = window.document.createElement("style");
+styleProbe.textContent = fs.readFileSync(path.join(dir, "styles.css"), "utf8");
+window.document.head.appendChild(styleProbe);
+check("R08 Brechas: la barra de lentes puede envolver en ancho estrecho",
+  window.getComputedStyle($(".lenses")).flexWrap === "wrap");
+
+/* R08 · RED2 transversal. La ausencia debe sobrevivir fuera de Brechas:
+   ninguna cola, programación, escena, ficha o mapa puede convertir la
+   cobertura observada en evaluación social, aptitud, plan o éxito atribuido. */
+setRole("enfermera-coordinadora");
+check("R08 transversal: coordinación no recibe obligación ni acción para cubrir la evaluación social",
+  !$('[data-open="OBL-CO-03"]')
+    && !window.sceneDef("caso-ana-social")
+    && !window.actionById("caso-ana-social", "co-social"));
+
+const tomorrowSurface = window.renderManana();
+check("R08 transversal: Mañana no asigna trabajo social ausente ni programa su reevaluación",
+  !/enfermería \+ trabajo social|TENS \+ trabajo social|reevaluación social[^<]*18-08-2026/i.test(tomorrowSurface)
+    && /evaluación social[^<]*(SIN TITULAR|PENDIENTE)/i.test(tomorrowSurface));
+
+const admissionSocial = JSON.stringify(window.sceneDef("regulacion-elena"));
+check("R08 transversal: admisión no presenta cuidador apto ni evaluación social completada",
+  !/Cuidador idóneo|carga media|cinco evaluaciones convergentes/i.test(admissionSocial)
+    && /Trabajo social · SIN TITULAR/i.test(admissionSocial)
+    && /PENDIENTE \/ NO DETERMINADA/i.test(admissionSocial));
+
+const caregiverGap = JSON.stringify(window.sceneDef("sobrecarga-cuidador"));
+check("R08 transversal: cuidador conserva su declaración sin acuse, plan ni reevaluación social ficticios",
+  /cu-retiro/.test(caregiverGap)
+    && !/Recibida con acuse|reevaluación social agendada|apoyo activado|trabajo social \(plan\)|18-08/i.test(caregiverGap)
+    && /SIN TITULAR/i.test(caregiverGap)
+    && /PENDIENTE \/ NO DETERMINAD[AO]/i.test(caregiverGap));
+
+const networkGap = JSON.stringify(window.sceneDef("red-activacion"));
+check("R08 transversal: R34 conserva su función sin atribuir integración ni cierre a trabajo social",
+  /rs-activar/.test(networkGap) && /rs-programar/.test(networkGap)
+    && !/trabajo social integra|reevaluación del 18-08|transfieren con acuse/i.test(networkGap)
+    && /integración social · SIN TITULAR/i.test(networkGap)
+    && /PENDIENTE \/ NO DETERMINADA/i.test(networkGap));
+
+for (const caseId of ["HOD-2026-0131", "HOD-2026-0129"]) {
+  setRole("direccion-tecnica");
+  window.openCase(caseId);
+  $('[data-lens="plan"]')?.click();
+  const planText = $("#main")?.textContent || "";
+  check(`R08 transversal: Plan ${caseId} rotula la evaluación social ausente sin éxito`,
+    !/V\. Reyes|Cuidadora idónea|programa municipal de apoyo activado|acuse en 72 h/i.test(planText)
+      && /Trabajo social · SIN TITULAR/i.test(planText)
+      && /PENDIENTE \/ NO DETERMINADA/i.test(planText));
+}
+
+setRole("enfermera-coordinadora");
+const historicalSocialTask = window.stopPopup("m1", 2);
+check("R08 transversal: el mapa histórico no muestra tarea social en curso ni acceso ejecutable",
+  !/trabajador-social|social-ana|en curso/i.test(historicalSocialTask)
+    && /Evaluación social · SIN TITULAR/i.test(historicalSocialTask)
+    && /pendiente/i.test(historicalSocialTask));
+const routeMapProbe = window.document.createElement("div");
+routeMapProbe.innerHTML = window.renderRutasMapa();
+const routeTableRegion = routeMapProbe.querySelector(".table-scroll");
+check("R08 transversal: la tabla del mapa histórico es una región de teclado con nombre",
+  routeTableRegion?.getAttribute("role") === "region"
+    && routeTableRegion?.getAttribute("tabindex") === "0"
+    && routeTableRegion?.getAttribute("aria-label") === "Posición de los móviles");
+
+/* R07 · la Ficha asignada de Ana converge a la finalidad OBL-TS-02. Las
+   mutaciones que este corte debe atrapar son: volver a renderCase desde
+   búsqueda/openCase, elegir silenciosamente una obligación ambigua, omitir
+   el paquete autorizado o reactivar la tarea tras haberla confirmado. */
+setRole("tecnico-enfermeria");
+const queueEntry = $('[data-open="OBL-TS-02"]');
+queueEntry?.click();
+check("R07 Ana desde cola: abre la escena primaria y enfoca su título",
+  !!queueEntry
+    && $("#main h1")?.textContent.includes("Control de signos y toma de muestra")
+    && window.document.activeElement === $("#main h1"));
+$('[data-back]')?.click();
+
+setRole("tecnico-enfermeria");
+$$('.app-nav button').find((b) => b.textContent === "Buscar").click();
+let r07Query = $("#q");
+r07Query.value = "HOD-2026-0129";
+r07Query.dispatchEvent(new window.Event("input"));
+$('[data-case-open="HOD-2026-0129"]')?.click();
+check("R07 Ana desde búsqueda: sustituye Ficha por la misma escena primaria",
+  $("#main h1")?.textContent.includes("Control de signos y toma de muestra")
+    && !$(".lenses") && !$("[data-ficha]"));
+$('[data-back]')?.click();
+check("R07 Ana desde búsqueda: volver conserva consulta y foco",
+  $("#q")?.value === "HOD-2026-0129" && window.document.activeElement === $("#q"));
+
+setRole("tecnico-enfermeria");
+window.openCase("HOD-2026-0129");
+check("R07 Ana desde openCase: converge a la escena primaria",
+  $("#main h1")?.textContent.includes("Control de signos y toma de muestra")
+    && !$("[data-back-case]"));
+
+const r07Text = $("#main").textContent;
+check("R07 Ana: muestra requisitos, insumos y canales genéricos autorizados",
+  r07Text.includes("Insumos requeridos confirmados")
+    && r07Text.includes("Canal institucional operativo con supervisora y laboratorio"));
+check("R07 Ana: conserva alerta operativa completa y acotada a la visita",
+  r07Text.includes("Alerta operativa de esta visita")
+    && r07Text.includes("Cuidador con sobrecarga declarada; posible entorno tenso")
+    && r07Text.includes("Ejecutar solo lo delegado; reportar cualquier señal de quiebre")
+    && r07Text.includes("Supervisora → coordinación · función social SIN TITULAR")
+    && r07Text.includes("PENDIENTE / NO DETERMINADA")
+    && r07Text.includes("Declaración de riesgo residual del caso"));
+check("R07 Ana: excluye Ficha, lentes, recorrido, planes, Pasado y territorio",
+  !$("[data-ficha]") && !$(".lenses") && !$(".j-strip")
+    && !r07Text.includes("Pulso — ahora") && !r07Text.includes("Pasado —")
+    && !r07Text.includes("Territorio:") && !r07Text.includes("Ajustar el plan"));
+
+const blockedMedication = $('[data-act="ts-ana-med"]');
+blockedMedication?.click();
+check("R07 Ana: medicamento permanece bloqueado con motivo, conservación y salida",
+  !!blockedMedication && !!$(".recovery-panel")
+    && $(".recovery-panel").textContent.includes("no cubre administración de medicamentos")
+    && $(".recovery-panel").textContent.includes("El plan del paciente no cambia")
+    && $(".recovery-panel").textContent.includes("Escale a la supervisora"));
+
+/* La relación exacta debe fallar cerrada si deja de ser unívoca; el fixture
+   vive en otro DOM para no contaminar la sesión principal evaluada. */
+$('[data-back]')?.click();
+const ambiguousDom = new JSDOM(html, { runScripts: "outside-only", url: "http://localhost/" });
+const ambiguousWindow = ambiguousDom.window;
+ambiguousWindow.eval(`${combined}\n;WORK["tecnico-enfermeria"].push({ id: "OBL-TS-02-DUP", scene: "atencion-ana-tens", title: "Duplicada", context: "HOD-2026-0129", risk: "A2", riskLabel: "Duplicada", due: "Hoy", receiver: "Supervisora", revision: "rev. 1", provenance: "Fixture RED" });`);
+const ambiguousRole = ambiguousWindow.document.querySelector("#role-select");
+ambiguousRole.value = "tecnico-enfermeria";
+ambiguousRole.dispatchEvent(new ambiguousWindow.Event("change"));
+ambiguousWindow.openCase("HOD-2026-0129");
+check("R07 Ana: una relación 0/>1 falla cerrada",
+  !ambiguousWindow.document.querySelector("[data-back-case]")
+    && !ambiguousWindow.document.querySelector("#main h1")?.textContent.includes("Control de signos y toma de muestra"));
+
+window.openCase("HOD-2026-0129");
+$('[data-act="ts-ana"]')?.click();
+$('[data-confirm="ts-ana"]')?.click();
+check("R07 Ana: outcome inmediato deja recibo enfocado y límite de maqueta explícito",
+  !!$(".outcome-receipt")
+    && window.document.activeElement === $(".outcome-receipt h2")
+    && $("#action-result").textContent.includes("sesión de maqueta")
+    && $("#action-result").textContent.includes("no prueba persistencia clínica ni backend"));
+$('[data-back]')?.click();
+check("R07 Ana: completar retira OBL-TS-02 de la cola",
+  !$('[data-open="OBL-TS-02"]'));
+
 setRole("kinesiologo");
-$$(".app-nav button").find(b => b.textContent === "Buscar").click();
-const q = $("#q"); q.value = "luis"; q.dispatchEvent(new window.Event("input"));
-$$("#search-results [data-case-open]")[0].click();
-check("ficha ajena: sin strip cuando no hay tarea del rol", !$(".case-task"));
+setRole("tecnico-enfermeria");
+check("R07 Ana: cambiar de rol y volver no resucita OBL-TS-02 en esta sesión",
+  !$('[data-open="OBL-TS-02"]'));
+$$('.app-nav button').find((b) => b.textContent === "Buscar").click();
+r07Query = $("#q");
+r07Query.value = "HOD-2026-0129";
+r07Query.dispatchEvent(new window.Event("input"));
+$('[data-case-open="HOD-2026-0129"]')?.click();
+check("R07 Ana: reabrir en la sesión muestra recibo de solo lectura sin primaria",
+  !!$(".outcome-receipt")
+    && $("#main").textContent.includes("sesión de maqueta")
+    && !$('[data-act="ts-ana"]')
+    && !$("[data-ficha]"));
+
+/* R06 · la asignación de Rosa converge desde las tres entradas al contexto
+   de finalidad de OBL-KN-01. Debe seguir siendo unívoca aunque el mismo caso
+   tenga otra obligación kinésica con una finalidad distinta. */
+setRole("kinesiologo");
+const r06QueueEntry = $('[data-open="OBL-KN-01"]');
+r06QueueEntry?.click();
+check("R06 Rosa desde cola: abre la escena primaria y enfoca su título",
+  !!r06QueueEntry
+    && $("#main h1")?.textContent.includes("Sesión kinésica")
+    && window.document.activeElement === $("#main h1"));
+$('[data-back]')?.click();
+
+setRole("kinesiologo");
+$$('.app-nav button').find((b) => b.textContent === "Buscar").click();
+let r06Query = $("#q");
+r06Query.value = "HOD-2026-0131";
+r06Query.dispatchEvent(new window.Event("input"));
+$('[data-case-open="HOD-2026-0131"]')?.click();
+check("R06 Rosa desde búsqueda: sustituye Ficha por la misma escena primaria",
+  $("#main h1")?.textContent.includes("Sesión kinésica")
+    && !$(".lenses") && !$("[data-ficha]") && !$("[data-back-case]"));
+$('[data-back]')?.click();
+check("R06 Rosa desde búsqueda: volver conserva consulta y foco",
+  $("#q")?.value === "HOD-2026-0131" && window.document.activeElement === $("#q"));
+
+setRole("kinesiologo");
+window.openCase("HOD-2026-0131");
+check("R06 Rosa desde openCase: converge a la escena primaria",
+  $("#main h1")?.textContent.includes("Sesión kinésica")
+    && !$("[data-back-case]"));
+
+const r06Text = $("#main").textContent;
+check("R06 Rosa: muestra finalidad funcional y paquete genérico de visita",
+  r06Text.includes("Función motora y respiratoria")
+    && r06Text.includes("dependencia y condiciones del hogar")
+    && r06Text.includes("Plan de rehabilitación vigente disponible")
+    && r06Text.includes("Alertas aplicables disponibles para esta visita")
+    && r06Text.includes("Insumos requeridos confirmados")
+    && r06Text.includes("Canal institucional operativo con coordinación y equipo clínico"));
+check("R06 Rosa: excluye Ficha, lentes, recorrido, Pasado y contexto ajeno",
+  !$("[data-ficha]") && !$(".lenses") && !$(".j-strip")
+    && !r06Text.includes("Pulso — ahora") && !r06Text.includes("Pasado —")
+    && !r06Text.includes("Territorio:") && !r06Text.includes("Ajustar el plan médico"));
+
+const blockedOxygen = $('[data-act="kn-oxigeno"]');
+blockedOxygen?.click();
+check("R06 Rosa: oxigenoterapia pendiente de visación permanece bloqueada con salida",
+  !!blockedOxygen && !!$(".recovery-panel")
+    && $(".recovery-panel").textContent.includes("visación de IAAS")
+    && $(".recovery-panel").textContent.includes("La sesión y el plan vigente se conservan")
+    && $(".recovery-panel").textContent.includes("Escalar al equipo clínico"));
+
+$('[data-back]')?.click();
+const r06AmbiguousDom = new JSDOM(html, { runScripts: "outside-only", url: "http://localhost/" });
+const r06AmbiguousWindow = r06AmbiguousDom.window;
+r06AmbiguousWindow.eval(`${combined}\n;WORK["kinesiologo"].push({ id: "OBL-KN-01-DUP", scene: "atencion-rosa-kine", title: "Duplicada", context: "HOD-2026-0131", risk: "A1", riskLabel: "Duplicada", due: "Hoy", receiver: "Kinesiología", revision: "rev. 1", provenance: "Fixture RED" });`);
+const r06AmbiguousRole = r06AmbiguousWindow.document.querySelector("#role-select");
+r06AmbiguousRole.value = "kinesiologo";
+r06AmbiguousRole.dispatchEvent(new r06AmbiguousWindow.Event("change"));
+r06AmbiguousWindow.openCase("HOD-2026-0131");
+check("R06 Rosa: una relación 0/>1 de la misma finalidad falla cerrada",
+  !r06AmbiguousWindow.document.querySelector("[data-back-case]")
+    && !r06AmbiguousWindow.document.querySelector("#main h1")?.textContent.includes("Sesión kinésica"));
+
+const r06MissingDom = new JSDOM(html, { runScripts: "outside-only", url: "http://localhost/" });
+const r06MissingWindow = r06MissingDom.window;
+r06MissingWindow.eval(`${combined}\n;WORK["kinesiologo"] = WORK["kinesiologo"].filter((item) => item.id !== "OBL-KN-01");`);
+const r06MissingRole = r06MissingWindow.document.querySelector("#role-select");
+r06MissingRole.value = "kinesiologo";
+r06MissingRole.dispatchEvent(new r06MissingWindow.Event("change"));
+r06MissingWindow.openCase("HOD-2026-0131");
+check("R06 Rosa: una relación ausente también falla cerrada",
+  !r06MissingWindow.document.querySelector("[data-back-case]")
+    && !r06MissingWindow.document.querySelector("#main h1")?.textContent.includes("Sesión kinésica"));
+
+window.openCase("HOD-2026-0131");
+$('[data-act="kn-rosa"]')?.click();
+$('[data-confirm="kn-rosa"]')?.click();
+check("R06 Rosa: outcome inmediato deja recibo enfocado y límite de maqueta explícito",
+  !!$(".outcome-receipt")
+    && window.document.activeElement === $(".outcome-receipt h2")
+    && $("#action-result").textContent.includes("sesión de maqueta")
+    && $("#action-result").textContent.includes("no prueba persistencia clínica ni backend"));
+$('[data-back]')?.click();
+check("R06 Rosa: completar retira sólo OBL-KN-01 de la cola",
+  !$('[data-open="OBL-KN-01"]')
+    && !!$('[data-open="OBL-KN-03"]'));
+
+setRole("tecnico-enfermeria");
+setRole("kinesiologo");
+check("R06 Rosa: cambiar de rol y volver no resucita OBL-KN-01 en esta sesión",
+  !$('[data-open="OBL-KN-01"]'));
+$$('.app-nav button').find((b) => b.textContent === "Buscar").click();
+r06Query = $("#q");
+r06Query.value = "HOD-2026-0131";
+r06Query.dispatchEvent(new window.Event("input"));
+$('[data-case-open="HOD-2026-0131"]')?.click();
+check("R06 Rosa: reabrir muestra recibo de solo lectura sin primaria ni Ficha",
+  !!$(".outcome-receipt")
+    && $("#main").textContent.includes("sesión de maqueta")
+    && !$('[data-act="kn-rosa"]')
+    && !$("[data-ficha]"));
+
+/* R09 · la asignación fonoaudiológica converge desde cola, búsqueda y
+   apertura directa hacia una escena por finalidad. El contrato atrapa volver
+   a la Ficha, preafirmar resultados o elegir silenciosamente una relación
+   ausente/ambigua. */
+setRole("fonoaudiologo");
+const r09QueueEntry = $('[data-open="OBL-FN-01"]');
+r09QueueEntry?.click();
+check("R09 Elena desde cola: abre la escena de finalidad y enfoca su título",
+  !!r09QueueEntry
+    && $("#main h1")?.textContent.includes("Evaluación e intervención fonoaudiológica")
+    && window.document.activeElement === $("#main h1"));
+$('[data-back]')?.click();
+
+setRole("fonoaudiologo");
+$$('.app-nav button').find((b) => b.textContent === "Buscar").click();
+let r09Query = $("#q");
+r09Query.value = "HOD-2026-0142";
+r09Query.dispatchEvent(new window.Event("input"));
+$('[data-case-open="HOD-2026-0142"]')?.click();
+check("R09 Elena desde búsqueda: sustituye Ficha por la misma escena de finalidad",
+  $("#main h1")?.textContent.includes("Evaluación e intervención fonoaudiológica")
+    && !$(".lenses") && !$("[data-ficha]") && !$("[data-back-case]"));
+$('[data-back]')?.click();
+check("R09 Elena desde búsqueda: volver conserva consulta y foco",
+  $("#q")?.value === "HOD-2026-0142" && window.document.activeElement === $("#q"));
+
+setRole("fonoaudiologo");
+window.openCase("HOD-2026-0142");
+check("R09 Elena desde openCase: converge a la escena de finalidad",
+  $("#main h1")?.textContent.includes("Evaluación e intervención fonoaudiológica")
+    && !$("[data-back-case]"));
+
+const r09Text = $("#main").textContent;
+const r09Package = $("#main .kv");
+check("R09 Elena: muestra finalidad completa sin delegar la evaluación profesional",
+  r09Text.includes("deglución, comunicación, voz y cognición")
+    && r09Text.includes("medir la respuesta")
+    && r09Text.includes("sin delegar evaluaciones profesionales")
+    && r09Text.includes("integrarlas al plan común"));
+check("R09 Elena: separa plan o indicación, alertas, insumos y contactos operables",
+  !!r09Package
+    && r09Package.querySelectorAll("dt").length === 4
+    && r09Text.includes("Plan o indicación aplicable")
+    && r09Text.includes("Alertas aplicables disponibles para esta visita")
+    && r09Text.includes("Insumos requeridos confirmados")
+    && r09Text.includes("Canal institucional operativo con el equipo interdisciplinario y APS"));
+check("R09 Elena: no preafirma diagnóstico, hallazgos ni evaluación completada",
+  !r09Text.includes("Disfagia orofaríngea")
+    && !r09Text.includes("riesgo de aspiración con líquidos finos")
+    && !r09Text.includes("comprensión verificada")
+    && !r09Text.includes("evaluación completa"));
+check("R09 Elena: excluye Ficha, lentes, recorrido y contexto ajeno; conserva una primaria",
+  !$("[data-ficha]") && !$(".lenses") && !$(".j-strip")
+    && !r09Text.includes("Pulso — ahora") && !r09Text.includes("Pasado —")
+    && !r09Text.includes("Territorio:")
+    && $$("[data-scene-actions] .btn.primary").length === 1);
+
+$('[data-back]')?.click();
+const r09AmbiguousDom = new JSDOM(html, { runScripts: "outside-only", url: "http://localhost/" });
+const r09AmbiguousWindow = r09AmbiguousDom.window;
+r09AmbiguousWindow.eval(`${combined}\n;WORK["fonoaudiologo"].push({ id: "OBL-FN-01-DUP", scene: "atencion-elena-fono", title: "Duplicada", context: "HOD-2026-0142", risk: "A2", riskLabel: "Duplicada", due: "Hoy", receiver: "Equipo", revision: "rev. 1", provenance: "Fixture RED" });`);
+const r09AmbiguousRole = r09AmbiguousWindow.document.querySelector("#role-select");
+r09AmbiguousRole.value = "fonoaudiologo";
+r09AmbiguousRole.dispatchEvent(new r09AmbiguousWindow.Event("change"));
+r09AmbiguousWindow.openCase("HOD-2026-0142");
+check("R09 Elena: una relación ambigua falla cerrada",
+  !r09AmbiguousWindow.document.querySelector("[data-back-case]")
+    && !r09AmbiguousWindow.document.querySelector("#main h1")?.textContent.includes("Evaluación e intervención fonoaudiológica"));
+
+const r09MissingDom = new JSDOM(html, { runScripts: "outside-only", url: "http://localhost/" });
+const r09MissingWindow = r09MissingDom.window;
+r09MissingWindow.eval(`${combined}\n;WORK["fonoaudiologo"] = WORK["fonoaudiologo"].filter((item) => item.id !== "OBL-FN-01");`);
+const r09MissingRole = r09MissingWindow.document.querySelector("#role-select");
+r09MissingRole.value = "fonoaudiologo";
+r09MissingRole.dispatchEvent(new r09MissingWindow.Event("change"));
+r09MissingWindow.openCase("HOD-2026-0142");
+check("R09 Elena: una relación ausente falla cerrada",
+  !r09MissingWindow.document.querySelector("[data-back-case]")
+    && !r09MissingWindow.document.querySelector("#main h1")?.textContent.includes("Evaluación e intervención fonoaudiológica"));
+
+window.openCase("HOD-2026-0142");
+$('[data-act="fn-elena"]')?.click();
+$('[data-confirm="fn-elena"]')?.click();
+check("R09 Elena: outcome inmediato deja recibo enfocado y límite de maqueta explícito",
+  !!$(".outcome-receipt")
+    && window.document.activeElement === $(".outcome-receipt h2")
+    && $("#action-result").textContent.includes("sesión de maqueta")
+    && $("#action-result").textContent.includes("no prueba persistencia clínica ni backend")
+    && $("#action-result").textContent.includes("no cambian el plan por sí solas")
+    && !$("#action-result").textContent.includes("evaluación completa"));
+$('[data-back]')?.click();
+check("R09 Elena: completar retira OBL-FN-01 de la cola",
+  !$('[data-open="OBL-FN-01"]'));
+
+setRole("kinesiologo");
+setRole("fonoaudiologo");
+check("R09 Elena: cambiar de rol y volver no resucita OBL-FN-01 en esta sesión",
+  !$('[data-open="OBL-FN-01"]'));
+$$('.app-nav button').find((b) => b.textContent === "Buscar").click();
+r09Query = $("#q");
+r09Query.value = "HOD-2026-0142";
+r09Query.dispatchEvent(new window.Event("input"));
+$('[data-case-open="HOD-2026-0142"]')?.click();
+check("R09 Elena: reabrir muestra recibo de sólo lectura sin primaria ni Ficha",
+  !!$(".outcome-receipt")
+    && $("#main").textContent.includes("sesión de maqueta")
+    && !$('[data-act="fn-elena"]')
+    && !$("[data-ficha]"));
 
 /* ===== cues en roles de unidad de cuidado ===== */
 setRole("cuidador");
@@ -162,7 +628,7 @@ check("equipo: cola conserva Plazo y Responsable siguiente, sin procedencia",
 const doc = window.document;
 setRole("enfermera-coordinadora");
 check("side: secciones Trabajo y Vistas", $$(".side-sec-name").map(e => e.textContent).join("|").includes("Trabajo") && $$(".side-sec-name").map(e => e.textContent).join("|").includes("Vistas"));
-check("side: badge con pendientes", $(".side-count") && $(".side-count").textContent === "4");
+check("side: badge con pendientes", $(".side-count") && $(".side-count").textContent === "3");
 check("side: Tareas del día marcada como actual", !!$('.side-item[aria-current="page"]'));
 check("side: trigger «Ir a…» presente", !!$("[data-pal-open]"));
 
@@ -202,7 +668,7 @@ setRole("enfermera-coordinadora");
 $$("[data-open]")[1].click(); // handoff-jorge
 check("crumb: visible al abrir escena", !!$(".crumb") && $(".crumb").textContent.includes("Tareas del día"));
 $(".crumb").click();
-check("crumb: vuelve a la cola", $$(".work-item").length === 4);
+check("crumb: vuelve a la cola", $$(".work-item").length === 3);
 setRole("medico-atencion-directa");
 $$("[data-open]")[1].click();
 $("[data-ficha]").click();

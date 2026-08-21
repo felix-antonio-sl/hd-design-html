@@ -413,7 +413,7 @@ table.data tbody tr:hover { background: var(--surface-subtle); }
 .session-card p { color: var(--muted); margin-bottom: var(--sp-3); }
 
 /* ---------- lentes Pulso | Plan | Pasado ---------- */
-.lenses { display: flex; gap: var(--sp-1); border-bottom: 1px solid var(--border); margin-bottom: var(--sp-3); }
+.lenses { display: flex; flex-wrap: wrap; gap: var(--sp-1); border-bottom: 1px solid var(--border); margin-bottom: var(--sp-3); }
 .lenses button {
   border: none; background: none; padding: var(--sp-2) var(--sp-3);
   font-size: var(--fs-label-action); font-weight: var(--fw-label-action);

@@ -117,12 +117,14 @@ const state = {
   role: "enfermera-coordinadora",
   view: "work",            // work | navroot | scene
   sceneId: null,
+  sceneFrom: null,         // origen de la escena para retorno con contexto
   caseId: null,            // ficha abierta
   caseFrom: null,          // vista de origen al abrir la ficha
   q: "",                   // consulta de búsqueda
   sim: "normal",           // normal | loading | empty | denied | conflict | stale | offline | unavailable | session_expired
   device: "auto",
   done: new Set(),         // obligaciones completadas (efecto durable simulado)
+  sessionOnlyDone: new Set(), // sólo vive en esta sesión de maqueta; no simula backend
   pendingConfirm: null,    // actionId en confirmación
   receipt: null,           // último OutcomeReceipt
   rejection: null,         // panel de salida no primaria
@@ -135,8 +137,23 @@ const state = {
 
 /* Acceso a ficha clínica: conductor y administrativo nunca; el derivador
    externo solo ve el estado de sus postulaciones, nunca la ficha interna. */
-const CLINICAL_FICHA = new Set(["direccion-tecnica", "enfermera-coordinadora", "medico-atencion-directa", "medico-regulador", "enfermero-clinico", "kinesiologo", "tecnico-enfermeria", "trabajador-social", "fonoaudiologo"]);
+const CLINICAL_FICHA = new Set(["direccion-tecnica", "enfermera-coordinadora", "medico-atencion-directa", "medico-regulador", "enfermero-clinico", "kinesiologo", "tecnico-enfermeria", "fonoaudiologo"]);
 const SEARCH_ACCESS = new Set([...CLINICAL_FICHA]);
+const ASSIGNMENT_SCOPED_FICHA = new Set(["enfermero-clinico", "kinesiologo", "tecnico-enfermeria", "fonoaudiologo"]);
+const PURPOSE_CONTEXTS = Object.freeze([
+  Object.freeze({
+    role: "tecnico-enfermeria", caseId: "HOD-2026-0129",
+    obligationId: "OBL-TS-02", sceneId: "atencion-ana-tens", actionId: "ts-ana"
+  }),
+  Object.freeze({
+    role: "kinesiologo", caseId: "HOD-2026-0131",
+    obligationId: "OBL-KN-01", sceneId: "atencion-rosa-kine", actionId: "kn-rosa"
+  }),
+  Object.freeze({
+    role: "fonoaudiologo", caseId: "HOD-2026-0142",
+    obligationId: "OBL-FN-01", sceneId: "atencion-elena-fono", actionId: "fn-elena"
+  })
+]);
 /* Recorridos y brechas son una herramienta de gobierno/auditoría, no una
    segunda tarea para quienes están ejecutando cuidado en terreno. */
 const GOVERNANCE_ACCESS = new Set(["direccion-tecnica", "medico-regulador", "seremi", "direccion-hospital", "calidad", "gestion-camas", "ti-datos"]);
@@ -145,11 +162,81 @@ const $ = (sel) => document.querySelector(sel);
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 function roleDef() { return ROLES.find((r) => r.id === state.role); }
+function r05SceneDef(id, source) {
+  if (!source || state.role !== "enfermero-clinico" || id !== "atencion-rosa") return source;
+  return {
+    ...source,
+    title: "Atención de Enfermería — Rosa C.",
+    header: {
+      ...source.header,
+      responsible: "Enfermería clínica",
+      provenance: "Programa diario del período · OBL-EN-01",
+      riskText: "Resultado crítico informado al médico · cuidados programados"
+    },
+    blocks: [
+      {
+        type: "section", heading: "Propósito de esta visita", items: [
+          "Valorar riesgos y respuesta observables antes y después de los cuidados indicados.",
+          "Administrar el tratamiento y manejar dispositivos según el plan de cuidados vigente.",
+          "Educar y comprobar comprensión con teach-back, sin transferir responsabilidad clínica al cuidador.",
+          "Registrar el mismo día los cuidados, la respuesta observada y cualquier umbral de escalamiento alcanzado."
+        ]
+      },
+      {
+        type: "kvgrid", heading: "Registro mínimo exigido", items: [
+          ["Valoración", "Riesgos y respuesta observables"],
+          ["Cuidados", "Tratamiento y manejo de dispositivos según indicación vigente"],
+          ["Educación", "Contenido entregado y comprensión comprobada con teach-back"],
+          ["Continuidad", "Hallazgo nuevo y escalamiento, si corresponde"]
+        ]
+      }
+    ],
+    actions: [{
+      id: "en-visita",
+      label: "Registrar cuidados, educación y respuesta observada",
+      kind: "primary",
+      availability: "available",
+      mode: "reconcilable_write",
+      confirm: "El registro queda con autoría de Enfermería en esta sesión de maqueta. No registra ni inventa un resultado clínico y no prueba persistencia clínica.",
+      outcome: {
+        happened: "La maqueta confirmó la intención de registrar la visita con autoría de Enfermería, sin completar datos clínicos.",
+        changed: "Sólo cambió el estado de esta sesión de maqueta; no prueba persistencia clínica ni recepción externa.",
+        responsible: "Enfermería clínica conserva la autoría y responsabilidad de completar el registro.",
+        next: "Completar el registro por el canal institucional aplicable y escalar cualquier hallazgo según el plan vigente."
+      }
+    }]
+  };
+}
 function sceneDef(id) {
   if (id === E2E08_MEDICAL_SCENE) return { kind: "scene", title: "E2E-08 · Resultado crítico de Rosa C." };
   let s = SCENES[id];
   if (s && s.alias) s = SCENES[s.alias];
-  return e2e01SceneDef(id, s);
+  return r05SceneDef(id, e2e01SceneDef(id, s));
+}
+
+function purposeContextForCase(caseId) {
+  return PURPOSE_CONTEXTS.find((context) => context.role === state.role && context.caseId === caseId) || null;
+}
+
+function purposeAssignment(caseId) {
+  const context = purposeContextForCase(caseId);
+  if (!context) return null;
+  const matches = (WORK[state.role] || []).filter((item) =>
+    item.scene === context.sceneId && sceneDef(item.scene)?.header?.caseId === context.caseId);
+  if (matches.length !== 1) return null;
+  const [item] = matches;
+  return item.id === context.obligationId ? item : null;
+}
+
+function currentPurposeContext() {
+  return PURPOSE_CONTEXTS.find((context) => context.role === state.role && context.sceneId === state.sceneId) || null;
+}
+
+function canOpenCase(caseId) {
+  if (!CLINICAL_FICHA.has(state.role)) return false;
+  if (purposeContextForCase(caseId)) return Boolean(purposeAssignment(caseId));
+  if (!ASSIGNMENT_SCOPED_FICHA.has(state.role)) return true;
+  return (WORK[state.role] || []).some((item) => sceneDef(item.scene)?.header?.caseId === caseId);
 }
 
 /* E2E-01 es una cadena concreta de admisión, no un reducer genérico. La
@@ -552,6 +639,7 @@ function e2e08ProjectionForRole(role = state.role) {
 
 function e2e08WorkItems() {
   const base = e2e01ProjectWorkItems((WORK[state.role] || []).filter((w) => !state.done.has(w.id)
+    && !state.sessionOnlyDone.has(w.id)
     && !E2E07_HIDDEN_LEGACY_WORK.has(w.id)
     && w.id !== "OBL-MD-01"
     && !(w.id === "OBL-LAB-01" && state.e2e08.communication)));
@@ -2071,6 +2159,8 @@ function renderScene() {
 
   const h = s.header;
   const person = h && h.person ? PEOPLE[h.person] : null;
+  const purposeContext = currentPurposeContext();
+  const purposeCompleted = purposeContext && state.sessionOnlyDone.has(purposeContext.obligationId);
 
   const headerHtml = h ? `
     <div class="resp-header">
@@ -2086,7 +2176,7 @@ function renderScene() {
         <span>Origen: ${esc(h.provenance)}</span>
         ${h.cutoff && h.cutoff !== CUTOFF ? `<span>Datos actualizados ${esc(h.cutoff)}</span>` : ""}
       </div>
-      ${CLINICAL_FICHA.has(state.role) && h.caseId && h.caseId.startsWith("HOD-") && typeof FICHAS !== "undefined" && FICHAS[h.caseId] ? `<div style="margin-top: var(--sp-2)"><button class="btn exit" data-ficha="${esc(h.caseId)}">Abrir ficha del caso</button></div>` : ""}
+      ${!purposeContext && CLINICAL_FICHA.has(state.role) && h.caseId && h.caseId.startsWith("HOD-") && typeof FICHAS !== "undefined" && FICHAS[h.caseId] ? `<div style="margin-top: var(--sp-2)"><button class="btn exit" data-ficha="${esc(h.caseId)}">Abrir ficha del caso</button></div>` : ""}
     </div>` : `
     <p class="view-meta">${esc(s.subtitle || "")}</p>`;
 
@@ -2147,7 +2237,7 @@ function renderScene() {
   /* acciones: a lo sumo una primaria; hidden_by_policy no se serializa */
   const offline = state.sim === "offline";
   const e2e08Lab = state.sceneId === "laboratorio-critico";
-  const acts = e2e08Lab ? e2e08LaboratoryActions() : (s.actions || []).filter((a) => a.availability !== "hidden");
+  const acts = purposeCompleted ? [] : e2e08Lab ? e2e08LaboratoryActions() : (s.actions || []).filter((a) => a.availability !== "hidden");
   const actionRows = acts.map((a) => {
     let av = a.availability;
     if (offline && av === "available" && a.mode === "only_online") av = "blocked_explainable";
@@ -2181,6 +2271,7 @@ function renderScene() {
     <div class="scene-support">${blocksHtml}</div>
     ${lowerBarHtml}
     ${e2e08Lab ? e2e08SessionSummaryHtml() : ""}
+    ${purposeCompleted ? renderSessionPrototypeReceipt(actionById(state.sceneId, purposeContext.actionId)) : ""}
     <div id="action-result" role="region" aria-label="Resultado de acción"></div>`;
 }
 
@@ -2230,6 +2321,10 @@ function renderReceipt(a) {
         <dt>Próximo paso</dt><dd>${esc(o.next)}</dd>
       </dl>
     </div>`;
+}
+
+function renderSessionPrototypeReceipt(a) {
+  return `<div class="context-banner" role="status"><span><b>Resultado conservado sólo en esta sesión de maqueta.</b> Este resultado no prueba persistencia clínica ni backend.</span></div>${renderReceipt(a)}`;
 }
 
 function focusActionResult() {
@@ -2581,7 +2676,17 @@ function renderSessionOverlay() {
 /* ================= FICHA CLÍNICA ADAPTADA (Caso) ================= */
 
 function openCase(caseId) {
-  if (!CLINICAL_FICHA.has(state.role)) return;
+  if (!canOpenCase(caseId)) return;
+  const assignedPurpose = purposeAssignment(caseId);
+  if (assignedPurpose) {
+    state.sceneFrom = state.view === "scene" ? state.sceneFrom : state.view;
+    state.view = "scene";
+    state.sceneId = assignedPurpose.scene;
+    state.pendingConfirm = null; state.receipt = null; state.rejection = null;
+    render();
+    focusSceneTitle();
+    return;
+  }
   state.caseFrom = state.view === "case" ? state.caseFrom : state.view;
   state.view = "case"; state.caseId = caseId;
   state.lens = HISTORY.some((h) => h.caseId === caseId) ? "pasado" : "pulso";
@@ -2635,7 +2740,7 @@ function renderCase() {
   /* el flujo completo de propuesta/derivación se demuestra sobre Rosa C. (declarado) */
   const demo = id === "HOD-2026-0131";
   const isMed = state.role === "medico-atencion-directa";
-  const canPropose = ["enfermero-clinico", "kinesiologo", "trabajador-social", "fonoaudiologo"].includes(state.role);
+  const canPropose = ["enfermero-clinico", "kinesiologo", "fonoaudiologo"].includes(state.role);
   let actions = "";
   if (demo && isMed) {
     actions = `<div class="action-item"><button class="btn primary" data-scene-goto="plan-ajuste-rosa">Ajustar el plan médico</button></div>
@@ -2697,7 +2802,7 @@ function renderSearchResults() {
   const host = $("#search-results");
   if (!host) return;
   const q = (state.q || "").trim().toLowerCase();
-  const all = searchIndex();
+  const all = searchIndex().filter((item) => canOpenCase(item.caseId));
   const hits = q ? all.filter((i) => (i.name + " " + i.caseId + " " + i.sector + " " + i.line + " " + i.state).toLowerCase().includes(q)) : all;
   const groups = [["activo", "Episodio vigente"], ["postulado", "Postulados"], ["egresado", "Episodio cerrado"]];
   host.innerHTML = groups.map(([st, label]) => {
@@ -2729,7 +2834,7 @@ function e2eChainHtml(id) {
 function renderBrechas() {
   const lens = state.brechasLens || "escenarios";
   const stageSel = state.brechaStage || "J0";
-  const lensBtn = (id, label) => `<button data-brecha-lens="${id}" aria-selected="${lens === id}">${label}</button>`;
+  const lensBtn = (id, label) => `<button role="tab" data-brecha-lens="${id}" aria-selected="${lens === id}">${label}</button>`;
 
   /* — lente 1: escenarios end-to-end como cadenas de handoffs — */
   const eCards = E2E.map((e) => `
@@ -2779,8 +2884,19 @@ function renderBrechas() {
 
   /* — lente 3: brechas abiertas (sin cerrar por pantalla) — */
   const bRows = BRECHAS.map((b) => `<tr><td><b>${esc(b[0])}</b></td><td>${esc(b[1])}</td><td>${esc(b[2])}</td><td>${esc(b[3])}</td></tr>`).join("");
+  const socialRoleGap = `
+    <section class="block notice-attention" data-social-role-gap aria-labelledby="social-role-gap-title">
+      <h2 id="social-role-gap-title">${esc(SOCIAL_ROLE_GAP.title)}</h2>
+      <dl class="kv">
+        <dt>Cobertura provisional observada</dt><dd>${esc(SOCIAL_ROLE_GAP.coverage)}</dd>
+        <dt>Límites</dt><dd>${esc(SOCIAL_ROLE_GAP.limits)}</dd>
+        <dt>Decisión sobre riesgo</dt><dd>${esc(SOCIAL_ROLE_GAP.risk)}</dd>
+        <dt>Plan de cierre</dt><dd>${esc(SOCIAL_ROLE_GAP.closure)}</dd>
+      </dl>
+    </section>`;
   const brechasTable = `
-    <div class="block"><h2>Las 13 brechas que siguen abiertas</h2><div class="table-scroll"><table class="data">
+    ${socialRoleGap}
+    <div class="block"><h2>Las 13 brechas que siguen abiertas</h2><div class="table-scroll" role="region" aria-label="Las 13 brechas que siguen abiertas" tabindex="0"><table class="data">
       <thead><tr><th>ID</th><th>Pregunta abierta</th><th>Roles afectados</th><th>Riesgo si sigue abierta</th></tr></thead>
       <tbody>${bRows}</tbody></table></div></div>
     <div class="block notice-info"><p class="notice-text">Las 18 interfaces externas tienen su propia pantalla en esta maqueta (selector de rol, Parte III): cada una muestra su traspaso con acuse y su brecha declarada — nunca la cierra. Sin observación de oficio no se inventa más interfaz que la del handoff.</p></div>`;
@@ -3020,7 +3136,7 @@ function bindActionResultEvents() {
       <dt>Qué ocurrió</dt><dd>Programa de mañana publicado (18-08-2026, borrador rev. 2).</dd>
       <dt>Qué cambió</dt><dd>8 paradas en 2 móviles quedan con asignación propuesta; cada función recibe la suya para aceptar o declinar.</dd>
       <dt>Responsable ahora</dt><dd>Cada función acepta la suya; coordinación conserva lo no aceptado y las brechas declaradas.</dd>
-      <dt>Próximo paso</dt><dd>Aceptaciones visibles en la Sala; la brecha de trabajo social queda escalada a Dirección Técnica con plazo hoy.</dd>
+      <dt>Próximo paso</dt><dd>Aceptaciones visibles en la Sala; Dirección Técnica ve la brecha de trabajo social sin que esta publicación le asigne cobertura, plazo ni cierre.</dd>
     </dl></div>`;
     focusActionResult();
   });
@@ -3046,8 +3162,12 @@ function bindActionResultEvents() {
       return;
     }
     if (a.outcome) {
-      state.done.add(obligationIdForScene(state.sceneId));
-      host.innerHTML = renderReceipt(a) + nextStripHtml();
+      const obligationId = obligationIdForScene(state.sceneId);
+      const purposeContext = currentPurposeContext();
+      const isSessionPurpose = purposeContext?.obligationId === obligationId;
+      state.done.add(obligationId);
+      if (isSessionPurpose) state.sessionOnlyDone.add(obligationId);
+      host.innerHTML = (isSessionPurpose ? renderSessionPrototypeReceipt(a) : renderReceipt(a)) + nextStripHtml();
       bindMainEvents();
       focusActionResult();
     } else {
@@ -3106,6 +3226,7 @@ function openObligation(workId) {
   }
   const w = workItems().find((x) => x.id === workId);
   if (!w) return;
+  state.sceneFrom = state.view === "scene" ? state.sceneFrom : state.view;
   state.view = "scene";
   state.sceneId = w.scene;
   state.pendingConfirm = null; state.receipt = null; state.rejection = null;
@@ -3114,13 +3235,29 @@ function openObligation(workId) {
 }
 
 function backToWork() {
-  state.view = "work";
+  const destination = state.sceneFrom || "work";
+  state.view = destination;
+  state.sceneFrom = null;
   state.sceneId = null; state.pendingConfirm = null; state.receipt = null; state.rejection = null;
   render();
-  $("#main")?.focus();
+  if (destination === "buscar") $("#q")?.focus();
+  else $("#main")?.focus();
 }
 
 /* ================= MAQUETA CHROME ================= */
+
+function setRole(roleId) {
+  if (!ROLES.some((role) => role.id === roleId)) {
+    const select = $("#role-select");
+    if (select) select.value = state.role;
+    return false;
+  }
+  state.role = roleId;
+  state.view = "work"; state.sceneId = null;
+  state.done = new Set(); state.queued = null;
+  render();
+  return true;
+}
 
 function bindMaqueta() {
   const sel = $("#role-select");
@@ -3129,12 +3266,7 @@ function bindMaqueta() {
     opt.value = r.id; opt.textContent = r.label;
     sel.appendChild(opt);
   });
-  sel.addEventListener("change", () => {
-    state.role = sel.value;
-    state.view = "work"; state.sceneId = null;
-    state.done = new Set(); state.queued = null;
-    render();
-  });
+  sel.addEventListener("change", () => setRole(sel.value));
 
   /* teclado global: ⌘K/Ctrl+K y «/» abren la paleta; Esc cierra;
      ↑↓ recorre la paleta o la lista de trabajo */

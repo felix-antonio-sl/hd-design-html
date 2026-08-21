@@ -23,8 +23,8 @@ function check(name, cond) {
   else { fail++; console.log("FAIL", name); }
 }
 
-/* 1. render inicial: coordinadora con 4 obligaciones y nav extra */
-check("coordinadora: 4 work items", $$(".work-item").length === 4);
+/* 1. render inicial: coordinadora con 3 obligaciones reales y nav extra */
+check("coordinadora: 3 work items", $$(".work-item").length === 3);
 check("coordinadora: nav Sala de Mando", $$(".app-nav button").some(b => b.textContent.includes("Sala de Mando")));
 
 /* 2. abrir obligación → escena handoff con header y acciones */
@@ -43,7 +43,7 @@ check("recibo declara responsable", $(".outcome-receipt").textContent.includes("
 
 /* 4. volver: la obligación completada salió de Mi trabajo */
 $("[data-back]").click();
-check("obligación completada salió de la cola", $$(".work-item").length === 3);
+check("obligación completada salió de la cola", $$(".work-item").length === 2);
 
 /* 5. acción bloqueada explica causa y salida (Sala de Mando → cerrar período) */
 $$(".app-nav button")[1].click();
@@ -152,7 +152,7 @@ $("[data-ficha]").click();
 check("ficha: título del caso", $("#main h1").textContent.includes("Rosa C."));
 check("ficha: tres lentes", $$(".lenses button").length === 3);
 $$(".lenses button").find(b => b.dataset.lens === "plan").click();
-check("ficha: los cuatro planes con autoría", ["Plan médico", "Plan de cuidados", "Plan de rehabilitación", "Plan social"].every(t => $("#main").textContent.includes(t)));
+check("ficha: tres planes y evaluación social ausente con autoría", ["Plan médico", "Plan de cuidados", "Plan de rehabilitación", "Evaluación social", "Trabajo social · SIN TITULAR"].every(t => $("#main").textContent.includes(t)));
 check("ficha: médico puede ajustar su plan", $$("#main .btn").some(b => b.textContent.includes("Ajustar el plan médico")));
 $$("#main .btn").find(b => b.textContent.includes("Derivar internamente")).click();
 check("derivación: escena con receptor y motivo", $("#main h1").textContent.includes("Derivación interna"));

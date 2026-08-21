@@ -37,14 +37,14 @@ const FICHAS = {
         "Restricción: fatiga respiratoria · suspender si SatO2 < 92%.",
         "Próxima sesión: hoy 11:30."
       ]},
-      { name: "Plan social", author: "Trabajo social · V. Reyes", version: "Versión 1 · 15-08-2026", items: [
-        "Cuidadora idónea · carga media · sin segundo cuidador declarado.",
-        "Sin brecha actual · reevaluación al egreso."
+      { name: "Evaluación social", author: "Trabajo social · SIN TITULAR", version: "PENDIENTE / NO DETERMINADA", items: [
+        "No existe evaluación social atribuida ni aptitud del cuidador certificada.",
+        "La cobertura observada por enfermería es incompleta y no equivalente."
       ]}
     ],
     pasado: [
       ["12-08-2026", "Postulación desde Medicina Interna con resumen completo"],
-      ["13-08-2026", "Cinco evaluaciones convergentes completas"],
+      ["13-08-2026", "Evaluaciones disponibles registradas · evaluación social pendiente"],
       ["14-08-2026", "Admisión aceptada · ingreso y línea base en domicilio"],
       ["16-08-2026", "Educación a cuidador con teach-back verificado"],
       ["17-08-2026 07:52", "Resultado crítico K+ 6,1 publicado · comunicación y conducta pendientes de registro"]
@@ -54,7 +54,7 @@ const FICHAS = {
   "HOD-2026-0138": {
     personKey: "jorge", risk: "A3", riskText: "Transferencia sin aceptar · ventana 11:00–13:00",
     journey: "J4",
-    band: { territory: "En origen (Medicina Interna)", precision: "domicilio por verificar al ingreso", caregiver: "Esposa, 68 años · evaluación social completada", contact: "Canal institucional · origen" },
+    band: { territory: "En origen (Medicina Interna)", precision: "domicilio por verificar al ingreso", caregiver: "Esposa, 68 años · evaluación social PENDIENTE · función SIN TITULAR", contact: "Canal institucional · origen" },
     responsibility: { now: "Medicina Interna (hasta la aceptación)", next: "Ventana de traslado 11:00–13:00 · recepción preparada", coverage: "Coordinación del período HODOM" },
     pulso: [
       ["Transferencia", "Handoff entregado 16-08 18:22 · aceptación HODOM pendiente"],
@@ -71,7 +71,7 @@ const FICHAS = {
     ],
     pasado: [
       ["15-08-2026", "Postulación desde Medicina Interna"],
-      ["16-08-2026", "Evaluaciones completas · admisión aceptada con ingreso programado"],
+      ["16-08-2026", "Evaluaciones disponibles registradas · evaluación social pendiente"],
       ["16-08-2026 18:22", "Handoff de transferencia entregado · esperando aceptación"],
       ["17-08-2026 07:45", "Recepción declarada preparada por coordinación"]
     ]
@@ -81,7 +81,7 @@ const FICHAS = {
     personKey: "ana", risk: "A3", riskText: "Cuidador con sobrecarga declarada",
     journey: "J6",
     band: { territory: "Población B · periurbano", precision: "ubicación exacta", caregiver: "Hija, 54 años · sobrecarga declarada 16-08 21:35", contact: "Canal institucional · cuidadora" },
-    responsibility: { now: "Médico tratante · trabajo social (plan social)", next: "Reevaluación social 18-08 o antes si hay quiebre", coverage: "Regulador remoto 20:00–08:00 (diseño, brecha V02)" },
+    responsibility: { now: "Médico tratante · función social SIN TITULAR", next: "Evaluación social PENDIENTE / NO DETERMINADA", coverage: "Regulador remoto 20:00–08:00 (diseño, brecha V02)" },
     pulso: [
       ["Hoy", "Control de signos y muestra TENS 10:15 (completada) · muestra en custodia al laboratorio"],
       ["Alerta activa", "Sobrecarga del cuidador — suprimible solo con reevaluación social"],
@@ -91,23 +91,23 @@ const FICHAS = {
     plan: [
       { name: "Plan médico", author: "Medicina · C. Herrera", version: "Versión 2 · 14-08-2026", items: [
         "Vigilancia de signos por visita · muestra de hoy con resultado esperado.",
-        "Sin cambios de tratamiento hasta reevaluación social."
+        "Sin cambios de tratamiento por una evaluación social que no existe."
       ]},
       { name: "Plan de cuidados", author: "Enfermería · J. Núñez", version: "Versión 2 · 14-08-2026", items: [
         "Control de signos y toma de muestra delegado a TENS con supervisión.",
         "Reporte inmediato de cualquier señal de quiebre del cuidado."
       ]},
-      { name: "Plan social", author: "Trabajo social · V. Reyes", version: "Versión 2 · 17-08-2026", items: [
-        "Sobrecarga moderada-alta · programa municipal de apoyo activado (acuse en 72 h).",
-        "Relevo familiar parcial en articulación.",
-        "Reevaluación 18-08 o antes si hay quiebre."
+      { name: "Evaluación social", author: "Trabajo social · SIN TITULAR", version: "PENDIENTE / NO DETERMINADA", items: [
+        "Existe una declaración atribuida de sobrecarga; no equivale a diagnóstico ni evaluación social.",
+        "No hay red activada, acuse ni plan social confirmado.",
+        "La cobertura observada por enfermería es incompleta y no equivalente."
       ]}
     ],
     pasado: [
       ["05-08-2026", "Ingreso HODOM desde urgencia"],
       ["14-08-2026", "Plan vigente versión 2"],
       ["16-08-2026 21:35", "Cuidadora declara sobrecarga por canal institucional"],
-      ["17-08-2026", "Evaluación social en terreno · red de apoyo activada"]
+      ["17-08-2026", "Necesidad de evaluación social visible · función sin titular"]
     ]
   },
 

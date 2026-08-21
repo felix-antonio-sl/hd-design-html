@@ -23,12 +23,12 @@ const SCENES = {
       { type: "kvgrid", heading: "Situación institucional", items: [
         ["Casos activos", "5"], ["Demanda no servida", "1 diferida con cuidado interino"],
         ["Cobertura nocturna", "contrato vigente · brecha de rescate en revisión"],
-        ["Dotación objetivo vs presente", "trabajo social sin titular hoy · cobertura provisional declarada"],
+        ["Dotación objetivo vs presente", "trabajo social SIN TITULAR · cobertura observada, incompleta y no equivalente"],
         ["Decisiones institucionales abiertas", "3"], ["Hallazgos con plazo", "1 (fiscalización)"]
       ]},
       { type: "table", heading: "Riesgos y problemas que requieren decisión", cols: ["Riesgo", "Condición", "Responsable", "Vence"], rows: [
         ["Cobertura de respuesta 20:00–08:00 sin fallback probado", "En revisión · rescate del 12-08 con demora de 42 min", "Dirección Técnica", "19-08-2026"],
-        ["Función trabajo social sin titular", "Cobertura provisional por enfermería con límites declarados", "Dirección Técnica", "18-08-2026"],
+        ["Función trabajo social sin titular", "PENDIENTE / NO DETERMINADA · V07 abierta", "Dirección Técnica", "Sin fecha determinada"],
         ["Cartera v2.3 sin ratificar", "Dos prestaciones ofrecidas sin respaldo versionado", "Dirección Técnica", "01-09-2026"]
       ]}
     ],
@@ -119,7 +119,7 @@ const SCENES = {
         ["Demanda", "3 postulaciones activas · 1 diferida con cuidado interino"],
         ["Capacidad hoy", "9 visitas planificables · 2 móviles · franja crítica 12:00–14:00"],
         ["Desviaciones", "1 visita reprogramada por acceso inseguro · 1 ruta con retraso 20 min"],
-        ["Brecha declarada", "Trabajo social sin titular · cobertura provisional con límites"],
+        ["Brecha declarada", "Trabajo social SIN TITULAR · cobertura observada, incompleta y no equivalente"],
         ["Demanda no servida", "1 prestación de ayer reprogramada con causa y orden justo"]
       ]},
       { type: "table", heading: "Despliegue y rutas", cols: ["Móvil", "Conductor", "Destinos", "Estado"], rows: [
@@ -159,23 +159,6 @@ const SCENES = {
         note: "Responder negativo conserva al origen como responsable y abre recuperación con motivo y próxima acción." }
     ]
   },
-  "caso-ana-social": {
-    kind: "scene", title: "Brecha de función — evaluación social de Ana P.",
-    header: { caseId: "HOD-2026-0129", person: "ana", responsible: "Coordinación (brecha) · cobertura provisional enfermería", revision: "rev. 2", provenance: "Alerta de sobrecarga 16-08-2026", cutoff: CUTOFF, risk: "A2", riskText: "Evaluación social pendiente · titular ausente" },
-    blocks: [
-      { type: "section", heading: "Situación", items: [
-        "El cuidador declaró sobrecarga el 16-08-2026 21:35; la evaluación social corresponde a trabajo social.",
-        "La función no tiene titular hoy. La cobertura provisional por enfermería está declarada con límites: no emite diagnóstico social.",
-        "El caso declara riesgo residual y alternativa autorizada: evaluación por trabajador social el 18-08 o reevaluación anticipada si hay quiebre."
-      ]}
-    ],
-    actions: [
-      { id: "co-social", label: "Declarar cobertura y reevaluación del riesgo residual", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "Declarar cobertura no convierte a enfermería en autora de la evaluación social.",
-        outcome: { happened: "Cobertura provisional declarada con límites y reevaluación agendada.", changed: "La brecha queda visible con dueño y fecha; nadie figura como autor de una evaluación que no emitió.", responsible: "Coordinación (brecha) · trabajo social al reincorporarse.", next: "Reevaluación 18-08-2026 o antes si el cuidador declara quiebre." } }
-    ]
-  },
-
   /* ================= MÉDICO ATENCIÓN DIRECTA ================= */
   "alerta-potasio": {
     kind: "scene", title: "Resultado crítico — Rosa C. · potasio 6,1 mmol/L",
@@ -246,10 +229,10 @@ const SCENES = {
     kind: "scene", title: "Verificación clínica de admisión — Elena F.",
     header: { caseId: "HOD-2026-0142", person: "elena", responsible: "Médico regulador (verificación clínica) · origen conserva la responsabilidad", revision: "rev. 7", provenance: "Solicitud completa 16-08-2026", cutoff: CUTOFF, risk: "A3", riskText: "Cola con orden justo · primera en espera" },
     blocks: [
-      { type: "table", heading: "Cinco evaluaciones convergentes (autores separados)", cols: ["Dimensión", "Autor", "Resultado", "Fecha"], rows: [
+      { type: "table", heading: "Evaluaciones de admisión (autorías separadas)", cols: ["Dimensión", "Autor", "Resultado", "Fecha"], rows: [
         ["Pertinencia clínica (verificación de admisión)", "Médico regulador — este acto, usted", "Por registrar ahora", "hoy"],
         ["Domicilio y territorio", "Enfermería", "Apto con adecuación menor", "15-08 12:40"],
-        ["Cuidador y capacidad de cuidado", "Trabajo social", "Cuidador idóneo · carga media", "15-08 17:05"],
+        ["Cuidador y capacidad de cuidado", "Trabajo social · SIN TITULAR", "PENDIENTE / NO DETERMINADA", "—"],
         ["Capacidad operacional situada", "Coordinación", "Cupo disponible desde 18-08 09:00", "16-08 18:00"],
         ["Deglución (cartera fonoaudiología)", "Fonoaudiología", "Riesgo de aspiración · plan de consistencias", "17-08 07:40"]
       ]},
@@ -351,17 +334,26 @@ const SCENES = {
     kind: "care", title: "Sesión kinésica — Rosa C.",
     header: { caseId: "HOD-2026-0131", person: "rosa", responsible: "Kinesiología", revision: "rev. 3", provenance: "Plan de rehabilitación vigente", cutoff: CUTOFF, risk: "A1", riskText: "Programada 11:30" },
     blocks: [
-      { type: "section", heading: "Objetivo funcional vigente", items: [
-        "Marcha supervisada 10 m con apoyo; línea base: 4 m con asistencia el 14-08.",
-        "Restricción declarada: fatiga respiratoria; suspender si SatO2 < 92%.",
-        "Educación a cuidador: movilización segura y prevención de caídas (teach-back pendiente)."
+      { type: "section", heading: "Finalidad funcional de la sesión", items: [
+        "Función motora y respiratoria: evaluar la línea base y medir la respuesta a la intervención.",
+        "Línea base de dependencia y condiciones del hogar disponibles para definir una intensidad segura.",
+        "Ante deterioro, carga excesiva del cuidador o barreras del hogar, reevaluar y escalar; no mantener una pauta estándar."
+      ]},
+      { type: "kvgrid", heading: "Paquete de la visita", items: [
+        ["Plan aplicable", "Plan de rehabilitación vigente disponible"],
+        ["Alertas aplicables", "Alertas aplicables disponibles para esta visita"],
+        ["Insumos requeridos", "Insumos requeridos confirmados"],
+        ["Contactos operables", "Canal institucional operativo con coordinación y equipo clínico"]
       ]}
     ],
     actions: [
       { id: "kn-rosa", label: "Registrar intervención y respuesta", kind: "primary", availability: "available", mode: "reconcilable_write",
-        confirm: "Registra intervención, tolerancia y resultado; offline se reconcilia después.",
-        outcome: { happened: "Intervención registrada: marcha 8 m con supervisión, tolerancia adecuada, SatO2 ≥ 94%.", changed: "El objetivo se actualiza a 12 m para la próxima sesión; el plan interdisciplinario recibe la respuesta.", responsible: "Kinesiología (plan motor) · enfermería (vigilancia).", next: "Próxima sesión 19-08; si hay deterioro respiratorio se escala al médico tratante." } },
-      { id: "kn-escalar", label: "Escalar deterioro funcional o respiratorio", kind: "exit", availability: "available" }
+        confirm: "Registra la intervención, la respuesta funcional y la continuidad propuesta; offline se reconcilia después.",
+        outcome: { happened: "Intervención y respuesta funcional registradas.", changed: "La respuesta queda disponible para ajustar el plan interdisciplinario con autoría kinésica.", responsible: "Kinesiología conserva la evaluación funcional y el equipo clínico recibe la continuidad propuesta.", next: "Reevaluar según respuesta; escalar cualquier deterioro funcional o respiratorio." } },
+      { id: "kn-escalar", label: "Escalar deterioro funcional o respiratorio", kind: "exit", availability: "available",
+        note: "La pauta vigente se conserva hasta que el equipo clínico reciba el deterioro y defina la continuidad." },
+      { id: "kn-oxigeno", label: "Instalar oxigenoterapia domiciliaria", kind: "exit", availability: "blocked_explainable",
+        explanation: { cause: "La oxigenoterapia domiciliaria espera visación de IAAS; no se instala como pauta habitual.", kept: "La sesión y el plan vigente se conservan sin introducir una prestación no visada.", exit: "Escalar al equipo clínico por el canal institucional y reevaluar la conducta." } }
     ]
   },
   "atencion-jorge-kine": {
@@ -398,11 +390,15 @@ const SCENES = {
   },
   "atencion-ana-tens": {
     kind: "scene", title: "Control de signos y toma de muestra — Ana P.",
-    header: { caseId: "HOD-2026-0129", person: "ana", responsible: "TENS asignado · supervisora: enfermería", revision: "rev. 1", provenance: "Delegación 16-08-2026", cutoff: CUTOFF, risk: "A2", riskText: "Entorno con alerta social declarada" },
+    header: { caseId: "HOD-2026-0129", person: "ana", responsible: "TENS asignado · supervisora: enfermería", revision: "rev. 1", provenance: "Delegación 16-08-2026", cutoff: CUTOFF, risk: "A2", riskText: "Alerta operativa de esta visita · entorno con alerta social declarada" },
     alerts: [
-      { level: "A2", condition: "Cuidador con sobrecarga declarada; posible entorno tenso", severity: "Media", receptor: "TENS y supervisora", action: "Ejecutar solo lo delegado; reportar cualquier señal de quiebre", suppression: "Suprimible al completar la visita sin hallazgos", escalation: "Supervisora → coordinación → trabajo social", expiry: "18-08-2026", authority: "Declaración de riesgo residual del caso" }
+      { level: "A2", condition: "Cuidador con sobrecarga declarada; posible entorno tenso", severity: "Media", receptor: "TENS y supervisora", action: "Ejecutar solo lo delegado; reportar cualquier señal de quiebre", suppression: "Suprimible al completar la visita sin hallazgos", escalation: "Supervisora → coordinación · función social SIN TITULAR", expiry: "PENDIENTE / NO DETERMINADA", authority: "Declaración de riesgo residual del caso" }
     ],
     blocks: [
+      { type: "kvgrid", heading: "Paquete de esta visita", items: [
+        ["Requisitos e insumos", "Insumos requeridos confirmados"],
+        ["Canales operables", "Canal institucional operativo con supervisora y laboratorio"]
+      ]},
       { type: "section", heading: "Tarea delegada", items: [
         "Control de signos y toma de muestra con custodia refrigerada; entrega a laboratorio antes de 12:00 vía conductor.",
         "No administrar medicamentos en esta visita: la delegación no lo cubre.",
@@ -418,63 +414,28 @@ const SCENES = {
     ]
   },
 
-  /* ================= TRABAJADOR SOCIAL ================= */
-  "social-ana": {
-    kind: "scene", title: "Evaluación social de urgencia — Ana P.",
-    header: { caseId: "HOD-2026-0129", person: "ana", responsible: "Trabajo social", revision: "rev. 2", provenance: "Alerta de sobrecarga 16-08-2026 21:35", cutoff: CUTOFF, risk: "A3", riskText: "Riesgo de quiebre del cuidado" },
-    alerts: [
-      { level: "A3", condition: "Cuidador declaró que no puede sostener el cuidado tal como está", severity: "Alta", receptor: "Trabajo social", action: "Evaluar voluntad, capacidad y sobrecarga; activar red", suppression: "No suprimible hasta reevaluación", escalation: "Coordinación y médico tratante si hay quiebre inminente", expiry: "18-08-2026", authority: "Alerta declarada por el cuidador" }
-    ],
-    blocks: [
-      { type: "section", heading: "Hechos (separados del juicio)", items: [
-        "Cuidador principal: hija, 54 años, trabaja jornada parcial; declaró sobrecarga el 16-08 21:35.",
-        "Red observable: un vecino colabora con compras; sin segundo cuidador declarado.",
-        "Vivienda y acceso evaluados como aptos al ingreso; la brecha actual es de carga, no de infraestructura."
-      ]},
-      { type: "section", heading: "Alternativas de red", items: [
-        "Relevo familiar parcial + ajuste de frecuencia de visitas (decisión clínica, no social).",
-        "Articulación con municipalidad: programa de apoyo a cuidadores con acuse y seguimiento.",
-        "Si hay quiebre: reevaluación de viabilidad del episodio con el decisor de admisión."
-      ]}
-    ],
-    actions: [
-      { id: "tso-ana", label: "Registrar evaluación y activar red de apoyo", kind: "primary", availability: "available", mode: "reconcilable_write",
-        confirm: "La evaluación mantiene autoría disciplinar; las acciones de red piden acuse.",
-        outcome: { happened: "Evaluación social registrada: sobrecarga moderada-alta; se activa programa municipal de apoyo y relevo familiar parcial.", changed: "El caso recibe plan social con acciones y receptores; el riesgo de quiebre queda en vigilancia con fecha.", responsible: "Trabajo social (plan social) · coordinación (ajuste operacional si corresponde).", next: "Acuse de municipalidad en 72 h; reevaluación 18-08 o antes si hay quiebre." } }
-    ]
-  },
-  "social-elena": {
-    kind: "scene", title: "Evaluación social de admisión — Elena F.",
-    header: { caseId: "HOD-2026-0142", person: "elena", responsible: "Trabajo social", revision: "rev. 1", provenance: "Visita domiciliaria 15-08-2026", cutoff: CUTOFF, risk: "A2", riskText: "Admisión esperando convergencia" },
-    blocks: [
-      { type: "section", heading: "Resultado de la visita del 15-08", items: [
-        "Cuidador propuesto: esposo, 79 años, autovalente; voluntad declarada y comprensión verificada.",
-        "Capacidad de cuidado: idónea para tareas no profesionales del plan, con carga media.",
-        "Se distingue: cuidador (esposo) · representante legal (no requerido, capacidad conservada) · contacto (hija, solo comunicación autorizada)."
-      ]}
-    ],
-    actions: [
-      { id: "tso-elena", label: "Firmar y entregar evaluación social al decisor", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "Firmar la entrega como una de las cinco evaluaciones que el decisor integra.",
-        outcome: { happened: "Evaluación social firmada y entregada: cuidador idóneo, carga media, roles distinguidos.", changed: "La admisión queda con las cinco evaluaciones completas; el decisor puede integrar.", responsible: "Decisor de admisión (integración y decisión).", next: "Decisión de admisión con motivo y receptor." } }
-    ]
-  },
-
   /* ================= FONOAUDIÓLOGO ================= */
   "atencion-elena-fono": {
-    kind: "scene", title: "Evaluación de deglución — Elena F.",
-    header: { caseId: "HOD-2026-0142", person: "elena", responsible: "Fonoaudiología", revision: "rev. 1", provenance: "Indicación médica 16-08-2026", cutoff: CUTOFF, risk: "A2", riskText: "Condiciona preparación del domicilio" },
+    kind: "scene", title: "Evaluación e intervención fonoaudiológica — Elena F.",
+    header: { caseId: "HOD-2026-0142", person: "elena", responsible: "Fonoaudiología", revision: "rev. 1", provenance: "Indicación vigente dentro de cartera", cutoff: CUTOFF, risk: "A2", riskText: "La recomendación debe integrarse al plan común" },
     blocks: [
-      { type: "section", heading: "Evaluación realizada", items: [
-        "Disfagia orofaríngea leve-moderada post evento neurológico; riesgo de aspiración con líquidos finos.",
-        "Recomendación: consistencias espesadas, postura 90°, supervisión en comidas, alarmas de atragantamiento.",
-        "Educación a cuidador con teach-back: comprensión verificada de consistencias y postura."
+      { type: "section", heading: "Finalidad fonoaudiológica de la visita", items: [
+        "Evaluar deglución, comunicación, voz y cognición cuando el cuadro lo requiere.",
+        "Intervenir dentro de cartera y medir la respuesta para prevenir aspiración y pérdida funcional.",
+        "Educar al cuidador en consistencias, postura y alarmas sin delegar evaluaciones profesionales.",
+        "Transferir recomendaciones a nutrición, medicina, enfermería y APS e integrarlas al plan común."
+      ]},
+      { type: "kvgrid", heading: "Paquete de la visita", items: [
+        ["Plan o indicación aplicable", "Indicación vigente dentro de la cartera fonoaudiológica disponible"],
+        ["Alertas aplicables", "Alertas aplicables disponibles para esta visita"],
+        ["Insumos requeridos", "Insumos requeridos confirmados"],
+        ["Contactos operables", "Canal institucional operativo con el equipo interdisciplinario y APS"]
       ]}
     ],
     actions: [
-      { id: "fn-elena", label: "Entregar evaluación y recomendaciones al equipo", kind: "primary", availability: "available", mode: "reconcilable_write",
-        confirm: "Las recomendaciones quedan enlazadas al plan; no son un plan paralelo.",
-        outcome: { happened: "Evaluación fonoaudiológica entregada con recomendaciones de consistencia, postura y alarmas.", changed: "El plan de cuidados y la preparación del domicilio incorporan la medida; la admisión queda con evaluación completa.", responsible: "Equipo tratante (integrar) · fonoaudiología (seguimiento).", next: "Reevaluación a la semana del ingreso; riesgo de aspiración comunicado a enfermería." } }
+      { id: "fn-elena", label: "Registrar intervención, respuesta y recomendaciones", kind: "primary", availability: "available", mode: "reconcilable_write",
+        confirm: "Registra lo evaluado, la intervención y respuesta observadas, la educación realizada y las recomendaciones propuestas para el plan común; no delega evaluaciones profesionales.",
+        outcome: { happened: "La intervención fonoaudiológica, la respuesta observada, la educación realizada y las recomendaciones propuestas quedaron registradas.", changed: "Las recomendaciones quedan disponibles para integración en el plan común; no cambian el plan por sí solas.", responsible: "Fonoaudiología conserva autoría profesional; el equipo interdisciplinario integra la recomendación.", next: "Nutrición, medicina, enfermería y APS revisan la recomendación según la continuidad del episodio." } }
     ]
   },
 
@@ -766,14 +727,17 @@ const SCENES = {
       { type: "kvgrid", heading: "Estado de la evaluación", items: [
         ["Evaluaciones completas", "3 de 5 · clínica, domicilio y territorio, capacidad operacional"],
         ["Pendiente de usted", "Conciliación de medicamentos completa (solicitada hoy 07:58)"],
-        ["Pendiente de HODOM", "Evaluación social y de deglución si aplica"],
+        ["Pendiente de HODOM", "Evaluación social SIN TITULAR y evaluación de deglución si aplica"],
         ["Orden justo", "Segunda en la cola · sin promesa de aceptación"]
       ]}
     ],
     actions: [
-      { id: "ex-conciliacion", label: "Adjuntar conciliación de medicamentos", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La conciliación queda adjunta con su autoría y hora; completa el dato mínimo.",
-        outcome: { happened: "Conciliación adjuntada (rev. 3) con su autoría.", changed: "La evaluación queda completa de su lado; regulación puede converger.", responsible: "Usted (datos de origen) · regulación (decisión).", next: "Decisión con motivo y alternativa por este canal." } }
+      { id: "ex-conciliacion", label: "Adjuntar conciliación de medicamentos", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Esta escena no contiene la conciliación ni su contenido, autoría y procedencia. Nombrar el faltante no crea el adjunto.",
+          kept: "La evaluación sigue pendiente, el dato de origen permanece incompleto y usted conserva la responsabilidad clínica.",
+          exit: "Adjunte la conciliación completa con autoría y procedencia mediante una superficie autorizada; recién entonces regulación puede continuar la evaluación."
+        } }
     ]
   },
 
@@ -968,9 +932,12 @@ const SCENES = {
       { type: "notice", tone: "attention", text: "La foto y la coordenada entran con custodia declarada: finalidad (llegar al domicilio), acceso (coordinación y conductores de la ruta) y retención (el episodio). Que hoy lleguen por canal informal funciona, pero no tiene custodia resuelta (tesis K13): registrarlas aquí las pone bajo regla. La ubicación nunca prueba que una visita o atención se hizo." }
     ],
     actions: [
-      { id: "dr-geo", label: "Registrar ubicación con precisión y referencia", kind: "primary", availability: "available", mode: "reconcilable_write",
-        confirm: "La ubicación queda con precisión declarada y la referencia bajo custodia; offline se sincroniza al volver.",
-        outcome: { happened: "Ubicación de Jorge M. registrada: exacta, con foto de fachada y acceso vehicular declarados.", changed: "El programa de mañana puede publicar la parada de ingreso con ubicación verificada.", responsible: "Coordinación (programa) · usted (registro de terreno).", next: "Si la precisión fuera «por sector», la persona queda en el mapa con esa condición declarada — nunca como punto exacto." } }
+      { id: "dr-geo", label: "Registrar ubicación con precisión y referencia", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Esta escena no capturó una coordenada, su precisión ni una referencia adjunta. Declarar custodia no crea esa evidencia geográfica.",
+          kept: "El domicilio permanece sin ubicación verificada, la obligación sigue pendiente y el programa de mañana no se habilita desde esta acción.",
+          exit: "Aporte coordenada, precisión y referencia mediante una superficie de captura bajo custodia; recién entonces se puede confirmar la ubicación."
+        } }
     ]
   },
   "ruta-incidente": {
@@ -1045,7 +1012,7 @@ const SCENES = {
     actions: [
       { id: "sec-anomalia", label: "Suspender la segunda sesión y notificar al titular", kind: "primary", availability: "available", mode: "only_online",
         confirm: "La suspensión es de la sesión, no de la cuenta; el titular confirma o la cuenta queda suspendida.",
-        outcome: { happened: "Segunda sesión suspendida 08:20; titular notificado para confirmar.", changed: "La autoría vuelve a ser atribuible a una persona por sesión; la bitácora conserva el evento completo.", responsible: "Seguridad (suspensión) · titular (confirmación) · Dirección Técnica si se confirma compartida.", next: "Sin confirmación en 24 h, la cuenta queda suspendida y se abre revisión de privilegios." } }
+        outcome: { happened: "Segunda sesión suspendida 08:20; titular notificado para confirmar.", changed: "La concurrencia quedó contenida; la atribución sigue pendiente de confirmación del titular. La bitácora conserva el evento completo.", responsible: "Seguridad (suspensión) · titular (confirmación) · Dirección Técnica si se confirma compartida.", next: "Sin confirmación en 24 h, la cuenta queda suspendida y se abre revisión de privilegios." } }
     ]
   },
 
@@ -1149,21 +1116,19 @@ const SCENES = {
   },
   "sobrecarga-cuidador": {
     kind: "scene", title: "Declarar sobrecarga o decir «no puedo más»",
-    header: { caseId: "HOD-2026-0129", person: "ana", responsible: "Coordinación y trabajo social reevalúan el plan", revision: "rev. 1", provenance: "Su declaración del 16-08-2026 21:35", cutoff: CUTOFF, risk: "A2", riskText: "En seguimiento desde su declaración" },
+    header: { caseId: "HOD-2026-0129", person: "ana", responsible: "Coordinación recibe la declaración · función social SIN TITULAR", revision: "rev. 1", provenance: "Su declaración del 16-08-2026 21:35", cutoff: CUTOFF, risk: "A2", riskText: "Seguimiento social PENDIENTE / NO DETERMINADO" },
     blocks: [
       { type: "notice", tone: "info", text: "Su rol es voluntario, limitado y sin responsabilidad clínica: declarar sobrecarga o retiro nunca es abandonar a Ana P. — obliga al equipo a reevaluar el plan. La culpa no es un dato del sistema." },
       { type: "kvgrid", heading: "Su declaración del 16-08", items: [
-        ["Estado", "Recibida con acuse · reevaluación social agendada 18-08"],
-        ["Mientras tanto", "Programa municipal de apoyo activado · relevo familiar en articulación"],
-        ["Si hay quiebre antes", "Declárelo aquí mismo: la reevaluación se adelanta; no se le pide aguantar"]
+        ["Estado", "Declaración atribuida · entrega y acuse PENDIENTES / NO DETERMINADOS"],
+        ["Mientras tanto", "Función social SIN TITULAR · no hay plan social ni apoyo confirmado"],
+        ["Si hay quiebre", "Declárelo aquí mismo; la maqueta conserva la señal sin afirmar evaluación ni red activada"]
       ]}
     ],
     actions: [
       { id: "cu-retiro", label: "Declarar que no puedo sostener el rol", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La declaración queda con hora y sin juicio; activa la reevaluación del plan, no un reproche.",
-        outcome: { happened: "Retiro del rol declarado con hora y acuse.", changed: "El episodio entra en reevaluación inmediata: la viabilidad del cuidado se revisa con trabajo social y coordinación; Ana P. no queda sin respuesta.", responsible: "Coordinación (reevaluar) · trabajo social (plan) · médico tratante (viabilidad).", next: "Se le confirma la decisión y el plan alterno; su cuidado hasta ese momento queda reconocido en el registro." } },
-      { id: "cu-seguir", label: "Seguir colaborando con el apoyo activado", kind: "exit", availability: "available",
-        note: "Queda registrado que continúa con el apoyo municipal y el relevo en articulación; la reevaluación del 18-08 se mantiene." }
+        confirm: "La declaración queda con hora y sin juicio; no equivale a una evaluación social ni confirma un receptor.",
+        outcome: { happened: "Retiro del rol declarado en esta sesión de maqueta.", changed: "La señal queda visible; entrega, acuse, evaluación social y plan alterno siguen PENDIENTES / NO DETERMINADOS.", responsible: "Coordinación conserva el seguimiento operativo · función social SIN TITULAR.", next: "La continuidad debe ser definida por el canal del episodio; esta maqueta no afirma recepción ni red activada." } }
     ]
   },
 
@@ -1185,9 +1150,12 @@ const SCENES = {
       ]}
     ],
     actions: [
-      { id: "se-resolver", label: "Resolver el expediente con evidencia de operación real", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La resolución queda con fundamento, alcance y verificación de cierre declarados.",
-        outcome: { happened: "Expediente resuelto con evidencia de operación, no solo de diseño.", changed: "La unidad queda con autorización y condiciones explícitas, o con observaciones con plazo.", responsible: "SEREMI (resolución) · Dirección Técnica (cumplimiento verificable).", next: "Si hay condiciones, cada una nace con plazo y verificación de cierre; la unidad responde desde registros, no desde memoria." } }
+      { id: "se-resolver", label: "Resolver el expediente con evidencia de operación real", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "El expediente enumera categorías de revisión, pero no presenta antecedentes recuperables y atribuibles ni una decisión explícita entre autorizar, prorrogar u observar.",
+          kept: "El expediente permanece pendiente; no se emite autorización, prórroga ni observación desde esta pantalla.",
+          exit: "Incorpore los antecedentes de operación con autoría y procedencia, y seleccione una decisión inequívoca con su fundamento."
+        } }
     ]
   },
   "fiscalizacion-observacion": {
@@ -1215,16 +1183,19 @@ const SCENES = {
     header: { caseId: "HOD-2026-0138", person: "jorge", responsible: "Equipo HODOM verifica · usted declara", revision: "rev. 1", provenance: "Verificación de representación 16-08-2026", cutoff: CUTOFF, risk: "A2", riskText: "Alcance por verificar, no presumir" },
     blocks: [
       { type: "notice", tone: "info", text: "Representante legal, cuidador y familiar de contacto son tres cosas distintas: la disponibilidad de un familiar no lo convierte en representante ni en cuidador." },
-      { type: "kvgrid", heading: "Su alcance verificado", items: [
+      { type: "kvgrid", heading: "Alcance por verificar", items: [
         ["Qué puede", "Recibir la información autorizada por el paciente · participar en cambios mayores, rescate y egreso según la voluntad de Jorge M."],
         ["Qué no es", "No desplaza ni vigila al cuidador · no decide atención diaria · no firma consentimientos fuera de su alcance"],
         ["Cómo se verifica", "Documento de representación registrado · alcance declarado con fecha y revisión"]
       ]}
     ],
     actions: [
-      { id: "rl-alcance", label: "Registrar el alcance verificado de la representación", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "El alcance queda registrado con fecha y respaldo; toda decisión posterior lo consulta.",
-        outcome: { happened: "Representación verificada y registrada con alcance explícito.", changed: "El equipo sabe qué decisiones la incluyen y cuáles no; la familia no es tratada como cuidador ni como representante sin serlo.", responsible: "Equipo HODOM (respeta el alcance) · registro del episodio (conserva el respaldo).", next: "Participación en cambios mayores según lo registrado; revisión si el alcance cambia." } }
+      { id: "rl-alcance", label: "Registrar el alcance verificado de la representación", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Como representante o familiar, usted puede declarar antecedentes, pero no puede verificar su propia calidad ni alcance.",
+          kept: "La obligación permanece pendiente; no se amplía la información autorizada ni se habilita una decisión en nombre de la persona.",
+          exit: "El equipo HODOM verifica el respaldo y el alcance declarado; sólo ese acto competente habilita registrar la representación verificada."
+        } }
     ]
   },
 
@@ -1271,9 +1242,12 @@ const SCENES = {
       { type: "notice", tone: "attention", text: "Un diferimiento por capacidad nunca se registra como rechazo clínico: son decisiones distintas con consecuencias distintas." }
     ],
     actions: [
-      { id: "gc-proponer", label: "Proponer candidato a la cola sin prometer cupo", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La propuesta queda en la cola con motivo; no compromete aceptación ni cupo.",
-        outcome: { happened: "Candidato propuesto a la cola compartida con motivo declarado.", changed: "La cola lo muestra como propuesto; la decisión sigue en el equipo HODOM según su proceso.", responsible: "Gestión de Camas (propone) · equipo HODOM (evalúa y decide).", next: "Seguimiento del estado en la cola; movilización solo con acuse del receptor." } }
+      { id: "gc-proponer", label: "Proponer candidato a la cola sin prometer cupo", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Esta escena no capturó el candidato, el motivo de la propuesta, la capacidad declarada ni las restricciones del día.",
+          kept: "La cola no incorpora una propuesta nueva y V01 permanece abierta; no se produce aceptación, cupo ni traslado.",
+          exit: "Registre candidato, motivo, capacidad y restricciones mediante una superficie autorizada; el equipo competente mantiene la evaluación de estabilidad, hogar, cuidador y respuesta."
+        } }
     ]
   },
 
@@ -1358,9 +1332,12 @@ const SCENES = {
       { type: "notice", tone: "info", text: "El ciclo completo del medicamento (gates G0–G7) sigue sin adjudicar: esta escena cubre la dispensación del episodio vigente; no cierra el ciclo." }
     ],
     actions: [
-      { id: "fa-dispensar", label: "Confirmar dispensación en ventana con entrega declarada", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La dispensación queda con hora, contenido y custodia de entrega al equipo.",
-        outcome: { happened: "Dispensación confirmada dentro de la ventana con custodia de entrega.", changed: "El equipo lleva el medicamento; el cuidador no sale a buscarlo ni media faltantes.", responsible: "Farmacia (preparación) · equipo HODOM (entrega y administración según plan).", next: "Devoluciones y residuos se registran al cierre de la entrega." } }
+      { id: "fa-dispensar", label: "Confirmar dispensación en ventana con entrega declarada", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Esta escena no capturó el contenido dispensado, la hora de la ventana, la custodia ni el receptor de entrega.",
+          kept: "La dispensación permanece pendiente y la ventana terapéutica sigue visible; no se afirma preparación, entrega ni administración.",
+          exit: "Registre contenido, hora, custodia y receptor mediante una superficie autorizada. El cuidador no debe buscar el medicamento ni mediar el faltante."
+        } }
     ]
   },
 
@@ -1400,9 +1377,12 @@ const SCENES = {
       ]}
     ],
     actions: [
-      { id: "img-citar", label: "Confirmar citación y retorno sin pasar por urgencia", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La citación queda con preparación, traslado y retorno declarados.",
-        outcome: { happened: "Examen citado con circuito de ida y vuelta declarado.", changed: "El episodio no se desancla: el paciente va y vuelve con el plan intacto.", responsible: "Imagenología (examen e informe) · médico HODOM (integración).", next: "Informe con acuse; hallazgos críticos por el circuito de resultado crítico." } }
+      { id: "img-citar", label: "Confirmar citación y retorno sin pasar por urgencia", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Esta escena no capturó la citación, la preparación, el traslado ni el retorno del circuito diagnóstico.",
+          kept: "El episodio y su plan no cambian; el examen, el informe y su integración permanecen pendientes.",
+          exit: "Registre citación, preparación, traslado y retorno mediante una superficie autorizada; los hallazgos críticos requieren su circuito de comunicación con acuse."
+        } }
     ]
   },
 
@@ -1419,9 +1399,12 @@ const SCENES = {
       { type: "notice", tone: "info", text: "El equipo tratante acepta, adapta o justifica la recomendación y cierra los pendientes: la conducción del plan sigue siendo única." }
     ],
     actions: [
-      { id: "esp-recomendar", label: "Emitir recomendación con certeza y seguimiento", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La recomendación queda registrada con certeza, alertas y seguimiento; la decisión final es del equipo tratante.",
-        outcome: { happened: "Recomendación emitida con nivel de certeza y seguimiento declarado.", changed: "El médico HODOM tiene la obligación de integrarla o justificar su desvío.", responsible: "Médico HODOM (integración y conducción única del plan).", next: "Seguimiento según lo propuesto; la interconsulta se cierra cuando el equipo tratante registra su decisión." } }
+      { id: "esp-recomendar", label: "Emitir recomendación con certeza y seguimiento", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Esta escena no capturó la recomendación, su nivel de certeza, las alertas ni el seguimiento propuesto.",
+          kept: "La integración permanece pendiente y el plan no cambia; no se crea una obligación clínica desde contenido ausente.",
+          exit: "Registre recomendación, certeza, alertas y seguimiento mediante una superficie autorizada; después el médico HODOM puede integrarla, adaptarla o justificar su desvío."
+        } }
     ]
   },
 
@@ -1439,9 +1422,12 @@ const SCENES = {
       { type: "notice", tone: "attention", text: "Pendiente de visación IAAS: la oxigenoterapia domiciliaria (práctica histórica ≤1 L/min) no se instala «como siempre» — espera visación con evidencia de aplicabilidad." }
     ],
     actions: [
-      { id: "ia-visar", label: "Visar el protocolo adaptado con evidencia de aplicabilidad", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La visación declara que el protocolo es aplicable, conocido y ejecutable en los domicilios reales de la cartera.",
-        outcome: { happened: "Protocolo adaptado a domicilio visado con evidencia de aplicabilidad.", changed: "El equipo tiene una regla ejecutable en terreno, no un documento de hospital traducido.", responsible: "IAAS (vigilancia) · Dirección Técnica (verificación del efecto).", next: "Vigilancia con denominadores declarados; sospechas entran al circuito de notificación." } }
+      { id: "ia-visar", label: "Visar el protocolo adaptado con evidencia de aplicabilidad", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Esta escena no contiene el protocolo ni evidencia de aplicabilidad que demuestre que es conocido y ejecutable en los domicilios reales.",
+          kept: "La visación permanece pendiente; no se presenta una regla de terreno como vigente y la oxigenoterapia pendiente no se habilita.",
+          exit: "Aporte el protocolo adaptado y evidencia recuperable de aplicabilidad, conocimiento y ejecución mediante una superficie autorizada; recién entonces IAAS puede visarlo."
+        } }
     ]
   },
 
@@ -1459,9 +1445,12 @@ const SCENES = {
       { type: "notice", tone: "info", text: "Cómo ingresa y cierra un evento HODOM en GCL/DCSP sigue abierto (brecha V06): este circuito lo declara; no lo da por resuelto." }
     ],
     actions: [
-      { id: "ca-analizar", label: "Abrir análisis con método y voz del usuario", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "El análisis queda con método declarado, participantes y fecha; la acción correctiva nacerá con dueño y verificación.",
-        outcome: { happened: "Análisis abierto con método y voz del usuario incluida.", changed: "El evento no se cierra por formulario: queda abierto hasta la acción con efecto verificado.", responsible: "Calidad (conduce el análisis) · Dirección Técnica (verifica el efecto).", next: "Acción correctiva con dueño y fecha; verificación de efecto al plazo." } }
+      { id: "ca-analizar", label: "Abrir análisis con método y voz del usuario", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Esta escena no capturó el método, los participantes, la fecha ni la voz del usuario del análisis.",
+          kept: "El evento permanece abierto y V06 sigue abierta; la acción correctiva, su efecto y sus verificaciones permanecen pendientes.",
+          exit: "Registre método, participantes, fecha y voz del usuario mediante una superficie autorizada; después Calidad puede abrir el análisis sin presentarlo como realizado."
+        } }
     ]
   },
 
@@ -1480,9 +1469,12 @@ const SCENES = {
       ]}
     ],
     actions: [
-      { id: "dh-decidir", label: "Decidir el riesgo con plazo y consecuencia", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La decisión queda explícita: aceptar, reducir, transferir o suspender, con plazo y consecuencia declarados.",
-        outcome: { happened: "Riesgo decidido a nivel hospitalario con plazo y consecuencia.", changed: "La unidad opera con una decisión explícita, no con un riesgo heredado sin dueño.", responsible: "Dirección hospitalaria (decisión) · Dirección Técnica (operación dentro de lo decidido).", next: "La decisión se comunica con efecto en cartera, dotación o cobertura; su cumplimiento se verifica al plazo." } }
+      { id: "dh-decidir", label: "Decidir el riesgo con plazo y consecuencia", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "No se ha seleccionado una decisión explícita entre aceptar, reducir, transferir o suspender, ni se han declarado su plazo y consecuencia.",
+          kept: "El riesgo permanece pendiente a nivel hospitalario; la unidad no recibe una autorización, mitigación, transferencia o suspensión aparente.",
+          exit: "Dirección hospitalaria debe escoger una alternativa y declarar plazo y consecuencia mediante una superficie autorizada; recién entonces la decisión puede comunicarse y verificarse."
+        } }
     ]
   },
 
@@ -1493,16 +1485,19 @@ const SCENES = {
     blocks: [
       { type: "kvgrid", heading: "Antes de asignar terreno", items: [
         ["Título y registro", "Verificados antes del ingreso, no después"],
-        ["Inducción HODOM", "44 horas teórica, práctica y supervisada, con registro — sin ella no hay actuación autónoma"],
+        ["Inducción HODOM", "32 de 44 horas registradas · faltan 12 h teóricas, prácticas y supervisadas — sin completarlas no hay actuación autónoma"],
         ["Matriz de competencias", "Qué puede ejecutar, con qué supervisión; ausencias y restricciones vigentes para coordinación"],
         ["Al retiro o cambio", "Los accesos se revocan con el mismo circuito"]
       ]},
       { type: "notice", tone: "info", text: "Esta habilitación destraba la provision de la cuenta (Seguridad) y la decisión de terreno de Dirección Técnica — tres actos distintos que no se presumen entre sí." }
     ],
     actions: [
-      { id: "gp-habilitar", label: "Habilitar a terreno con inducción completada", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La habilitación queda con evidencia de título, registro e inducción; la ratificación de terreno es de Dirección Técnica.",
-        outcome: { happened: "Refuerzo habilitado con inducción de 44 h registrada.", changed: "Dirección Técnica puede ratificar terreno; Seguridad puede provisionar la cuenta con función declarada.", responsible: "Gestión de Personas (registro) · DT (ratificación de terreno) · Seguridad (cuenta).", next: "Matriz de competencias disponible para coordinación al armar el programa del 24-08." } }
+      { id: "gp-habilitar", label: "Habilitar a terreno con inducción completada", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "El registro vigente conserva 32 de 44 horas: faltan 12 h de inducción teórica, práctica y supervisada.",
+          kept: "La habilitación de terreno permanece bloqueada; la cuenta de Seguridad no obtiene autoridad clínica y el refuerzo no entra al programa autónomo.",
+          exit: "Complete las 12 h restantes con evidencia por sesión. Gestión de Personas verifica el registro completo; después Dirección Técnica ratifica terreno y Seguridad provisiona por actos separados."
+        } }
     ]
   },
 
@@ -1541,21 +1536,24 @@ const SCENES = {
       { type: "notice", tone: "info", text: "Un control se declara cerrado solo con un guard vivo y una prueba negativa que lo defiende; la presencia de un documento no es un control." }
     ],
     actions: [
-      { id: "ti-verificar", label: "Verificar controles con evidencia y declarar los pendientes", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "Cada control queda con su evidencia o con su brecha declarada; ninguno se da por cumplido por checklist.",
-        outcome: { happened: "Controles verificados con evidencia; pendientes declarados con plan.", changed: "DT y auditoría ven el estado real: qué está defendido por un guard vivo y qué sigue abierto.", responsible: "TI (verificación) · Dirección Técnica (decide sobre lo pendiente).", next: "Las brechas de datos (V05) permanecen visibles hasta su resolución con autoridad." } }
+      { id: "ti-verificar", label: "Verificar controles con evidencia y declarar los pendientes", kind: "primary", availability: "blocked_explainable",
+        explanation: {
+          cause: "Esta escena no contiene el guard vivo, la prueba negativa ni evidencia y plan recuperables por control.",
+          kept: "La verificación permanece pendiente: el ejercicio de contingencia no está realizado y V05 sigue abierta, sin presentar el checklist como control cumplido.",
+          exit: "Vincule cada control con su guard, prueba, evidencia y plan recuperables mediante una superficie autorizada; recién entonces TI puede verificar su estado."
+        } }
     ]
   },
 
   /* ================= R34 · RED SOCIAL-TERRITORIAL ================= */
   "red-activacion": {
     kind: "scene", title: "Activación de apoyo — con disponibilidad confirmada o no existe",
-    header: { caseId: "HOD-2026-0129", person: "ana", responsible: "Red social-territorial activa · trabajo social integra", revision: "rev. 1", provenance: "Solicitud de activación de red 16-08-2026", cutoff: CUTOFF, risk: "A2", riskText: "Red nominal sin confirmar no existe" },
+    header: { caseId: "HOD-2026-0129", person: "ana", responsible: "Red social-territorial · integración social · SIN TITULAR", revision: "rev. 1", provenance: "Necesidad declarada · solicitud no ratificada", cutoff: CUTOFF, risk: "A2", riskText: "Red nominal sin confirmar no existe · integración social PENDIENTE / NO DETERMINADA" },
     blocks: [
       { type: "kvgrid", heading: "La solicitud trae", items: [
         ["Necesidad", "Apoyo a cuidador con sobrecarga declarada (relevo y acompañamiento)"],
-        ["Consentimiento", "De la persona y del cuidador, registrado"],
-        ["Urgencia y responsable", "Antes de la reevaluación del 18-08 · solicitante identificado"]
+        ["Consentimiento", "PENDIENTE / NO DETERMINADO"],
+        ["Urgencia y responsable", "PENDIENTE / NO DETERMINADA"]
       ]},
       { type: "section", heading: "Lo que activa significa", items: [
         "Aceptar, rechazar o programar con fundamento y plazo realista — nunca «activada» sin disponibilidad confirmada.",
@@ -1563,11 +1561,10 @@ const SCENES = {
       ]}
     ],
     actions: [
-      { id: "rs-activar", label: "Confirmar apoyo con disponibilidad y responsable", kind: "primary", availability: "available", mode: "only_online",
-        confirm: "La activación queda con recurso, disponibilidad y responsable confirmados — con fecha y plazo.",
-        outcome: { happened: "Apoyo activado con disponibilidad y responsable confirmados.", changed: "El plan de Ana P. cuenta con un apoyo real, no nominal; la reevaluación del 18-08 lo verifica.", responsible: "Red municipal (ejecuta) · trabajo social (integra al plan).", next: "Seguimiento en la reevaluación; al egreso, las gestiones abiertas se transfieren con acuse." } },
-      { id: "rs-programar", label: "Programar con plazo realista y fundamento", kind: "exit", availability: "available",
-        note: "La programación queda con plazo y fundamento; la solicitud no desaparece mientras tanto." }
+      { id: "rs-activar", label: "Confirmar apoyo con disponibilidad y responsable", kind: "primary", availability: "blocked_explainable",
+        explanation: { cause: "La solicitud no tiene consentimiento, urgencia ni responsable ratificados.", kept: "La necesidad permanece visible sin afirmar apoyo activado.", exit: "Complete el contrato de la solicitud antes de enviarla." } },
+      { id: "rs-programar", label: "Programar con plazo realista y fundamento", kind: "exit", availability: "blocked_explainable",
+        explanation: { cause: "No existe todavía una solicitud atribuida y operable.", kept: "La necesidad no desaparece.", exit: "Defina solicitud y receptor antes de programar." } }
     ]
   }
 };

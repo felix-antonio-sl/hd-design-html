@@ -69,7 +69,7 @@ const CIRCUITS = {
         cargo: "retiro de muestra con custodia refrigerada",
         tasks: [
           { role: "tecnico-enfermeria", label: "Control de signos y toma de muestra", scene: "atencion-ana-tens", status: "completada" },
-          { role: "trabajador-social", label: "Evaluación de sobrecarga del cuidador", scene: "social-ana", status: "en_curso" }
+          { role: "sin-titular", roleLabel: "Brecha de función", label: "Evaluación social · SIN TITULAR", scene: null, status: "pendiente" }
         ] },
       { seq: 3, x: 415, y: 262, personKey: null, alias: "Laboratorio HSC", window: "antes de 12:00", sector: "Base",
         status: "en_curso", arrived: "11:12", left: null,

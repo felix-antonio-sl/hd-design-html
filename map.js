@@ -274,7 +274,7 @@ function stopPopup(circuitId, seq) {
   const person = s.personKey ? PEOPLE[s.personKey] : null;
   const name = person ? `${person.alias} · ${person.age} años` : s.alias;
   const tasks = s.tasks.map((t) => {
-    const roleLabel = ROLES.find((r) => r.id === t.role)?.label || t.role;
+    const roleLabel = t.roleLabel || ROLES.find((r) => r.id === t.role)?.label || t.role;
     const st = { completada: "completada", en_curso: "en curso", pendiente: "pendiente" }[t.status];
     const open = t.role === state.role && !s.s3 ? `<button class="btn" data-open-scene="${esc(t.scene)}">Abrir la tarea</button>` : "";
     return `<li><b>${esc(roleLabel)}:</b> ${esc(t.label)} <span class="stop-status ${esc(t.status)}">${st}</span> ${open}</li>`;
@@ -333,7 +333,7 @@ function renderRutasMapa() {
     </div>
     <div class="block">
       <h2>Posición de los móviles</h2>
-      <div class="table-scroll"><table class="data">
+      <div class="table-scroll" role="region" aria-label="Posición de los móviles" tabindex="0"><table class="data">
         <thead><tr><th>Móvil</th><th>Estado</th><th>Situación</th><th>Último reporte</th></tr></thead>
         <tbody>${vehicleRows}</tbody>
       </table></div>
